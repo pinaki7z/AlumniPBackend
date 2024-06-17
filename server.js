@@ -44,7 +44,7 @@ const { clearTimeout } = require("timers");
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 app.use(
   cors({
-    origin: ["http://localhost:3000", "https://alumni-frontend-two.vercel.app"],
+    origin: ["http://localhost:3000", "https://alumni-frontend-4ca1.vercel.app/"],
     credentials: true,
   })
 );
