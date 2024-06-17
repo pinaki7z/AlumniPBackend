@@ -36,7 +36,7 @@ const path = require("path");
 const db = require("./db");
 
 const app = express();
-const apiPort = 5000;
+const apiPort = 6000;
 
 const alumniRoutes = require("./routes/alumni");
 const { clearTimeout } = require("timers");
