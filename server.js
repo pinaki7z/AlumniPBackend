@@ -41,7 +41,7 @@ const apiPort = 5000;
 const alumniRoutes = require("./routes/alumni");
 const { clearTimeout } = require("timers");
 
-app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
+app.use(bodyParser.urlencoded({ extended: true, limit: "2000mb" }));
 app.use(
   cors({
     origin: ["http://localhost:3000", "https://alumni-frontend-4ca1.vercel.app/"],
