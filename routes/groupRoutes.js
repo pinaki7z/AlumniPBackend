@@ -60,18 +60,14 @@ groupRoutes.post("/create", async (req, res) => {
   const {
     userId,
     groupName,
-    members,
+    member,
     groupLogo,
     groupType,
     category,
-    isNewest,
-    isPopular,
-    isActive,
     groupPicture,
   } = req.body;
 
-  try {
-    
+  try {    
     const user = await Alumni.findById(userId);
     let businessConnect = false;
 
@@ -98,7 +94,7 @@ groupRoutes.post("/create", async (req, res) => {
         });
       }
       businessConnect = true;
-    }
+    };
 
 
     const currentDate = new Date();
@@ -107,7 +103,7 @@ groupRoutes.post("/create", async (req, res) => {
       groupName,
       groupLogo,
       createdAt: currentDate,
-      members: [userId],
+      members: [member],
       groupType,
       category,
       businessConnect,
@@ -116,7 +112,7 @@ groupRoutes.post("/create", async (req, res) => {
     });
 
     await Alumni.updateMany(
-      { _id: { $in: members } },
+      { _id: { $in: member.userId } },
       { $addToSet: { groupNames: newGroup._id } }
     );
 
@@ -134,11 +130,10 @@ groupRoutes.get("/joined", async (req, res) => {
     const { userId } = req.query;
     const page = parseInt(req.query.page);
     const size = parseInt(req.query.size);
-
     const skip = (page - 1) * size;
 
-    const total = await Group.countDocuments({ members: userId });
-    const groups = await Group.find({ members: userId })
+    const total = await Group.countDocuments({ "members.userId": userId });
+    const groups = await Group.find({ "members.userId": userId })
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(size);
@@ -197,33 +192,36 @@ groupRoutes.get("/groups/popular", async (req, res) => {
 });
 
 groupRoutes.put("/members/:_id", async (req, res) => {
-  const { userId, notificationId } = req.body;
+  const { member, notificationId } = req.body;
   const { _id } = req.params;
-
+  console.log('member', member);
   try {
     if (notificationId) {
       await Notification.findByIdAndDelete(notificationId);
     }
+
     const group = await Group.findById(_id);
     if (!group) {
       console.error("No such group");
       return res.status(404).send("Group not found");
     }
 
-    const user = await Alumni.findById(userId);
+    const user = await Alumni.findById(member.userId);
     if (!user) {
       console.error("No such user");
       return res.status(404).send("User not found");
     }
 
-    const userIndex = group.members.indexOf(userId);
+    const memberIndex = group.members.findIndex(
+      (m) => m.userId.toString() === member.userId
+    );
     let isUserAdded;
 
-    if (userIndex !== -1) {
-      group.members.splice(userIndex, 1);
+    if (memberIndex !== -1) {
+      group.members.splice(memberIndex, 1);
       isUserAdded = false;
     } else {
-      group.members.push(userId);
+      group.members.push(member);
       isUserAdded = true;
     }
     await group.save();
@@ -236,14 +234,13 @@ groupRoutes.put("/members/:_id", async (req, res) => {
     }
     await user.save();
 
-    return res
-      .status(200)
-      .json({ message: "Group updated successfully", isUserAdded });
+    return res.status(200).json({ message: "Group updated successfully", isUserAdded });
   } catch (error) {
     console.error("Error occurred:", error);
     return res.status(500).send("Internal Server Error");
   }
 });
+
 
 groupRoutes.put("/:_id", async (req, res) => {
   const groupId = req.params._id;
@@ -320,12 +317,12 @@ groupRoutes.get("/", async (req, res) => {
 
     const total = await Group.countDocuments({
       userId: { $ne: userId },
-      members: { $ne: userId },
+      "members.userId": { $ne: userId },
     });
 
     const groups = await Group.find({
       userId: { $ne: userId },
-      members: { $ne: userId },
+      "members.userId": { $ne: userId },
     })
       .sort({ createdAt: -1 })
       .skip(skip)

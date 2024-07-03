@@ -264,8 +264,6 @@ alumniRoutes.get("/all", async (req, res) => {
 
 alumniRoutes.get(
   "/:alumniId",
-  verifyToken,
-  checkGroupExists,
   async (req, res) => {
     try {
       const alumni = await Alumni.findById(req.params.alumniId).select(
@@ -399,7 +397,7 @@ alumniRoutes.patch("/:_id/follow", async (req, res) => {
       await alumni.save();
       await userToUpdate.save();
 
-      res.status(200).json({ message: "Unfollowed successfully" });
+      res.status(200).json({ message: "Unfollowed successfully", alumni: userToUpdate });
     } else {
       alumni.followers.push({ userId, firstName: userToUpdate.firstName });
       userToUpdate.following.push({ userId: _id, firstName: alumni.firstName });
@@ -507,7 +505,7 @@ alumniRoutes.post("/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    // Find the user by email
+    
     const alumni = await Alumni.findOne({ email });
 
     if (!alumni) {
@@ -515,13 +513,13 @@ alumniRoutes.post("/verify-otp", async (req, res) => {
       return res.status(404).send("alumni not found");
     }
 
-    // Check if the provided OTP matches the stored OTP
+    
     if (alumni.otp !== otp) {
       console.error("Invalid OTP");
       return res.status(400).send("Invalid OTP");
     }
 
-    // OTP is valid, update the alumni's status and remove the OTP
+   
     alumni.status = "Verified";
     alumni.otp = undefined;
     await alumni.save();

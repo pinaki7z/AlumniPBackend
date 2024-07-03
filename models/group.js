@@ -4,7 +4,13 @@ const groupSchema = new mongoose.Schema({
   groupName: String,
   userId: String,
   groupLogo: String,
-  members: [String],
+  members: [
+    {
+    userId: String,
+    profilePicture: String,
+    userName: String,
+  }
+],
   createdAt: Date,
   category: String,
   groupType: String,
