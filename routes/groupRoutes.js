@@ -96,7 +96,6 @@ groupRoutes.post("/create", async (req, res) => {
       businessConnect = true;
     };
 
-
     const currentDate = new Date();
     const newGroup = new Group({
       userId,
@@ -192,9 +191,9 @@ groupRoutes.get("/groups/popular", async (req, res) => {
 });
 
 groupRoutes.put("/members/:_id", async (req, res) => {
-  const { member, notificationId } = req.body;
+  const { members, notificationId } = req.body;
   const { _id } = req.params;
-  console.log('member', member);
+  console.log('members', members);
   try {
     if (notificationId) {
       await Notification.findByIdAndDelete(notificationId);
@@ -206,35 +205,45 @@ groupRoutes.put("/members/:_id", async (req, res) => {
       return res.status(404).send("Group not found");
     }
 
-    const user = await Alumni.findById(member.userId);
-    if (!user) {
-      console.error("No such user");
-      return res.status(404).send("User not found");
+    let addedMembers = [];
+    let removedMembers = [];
+
+    for (let member of members) {
+      const user = await Alumni.findById(member.userId);
+      if (!user) {
+        console.error(`No such user with ID: ${member.userId}`);
+        continue; 
+      }
+
+      const memberIndex = group.members.findIndex((m) => m.userId.toString() === member.userId);
+
+      if (memberIndex !== -1) {
+        // If the member already exists, remove them
+        group.members.splice(memberIndex, 1);
+        removedMembers.push(member);
+        const groupIndex = user.groupNames.indexOf(_id);
+        if (groupIndex !== -1) {
+          user.groupNames.splice(groupIndex, 1);
+        }
+      } else {
+        // If the member doesn't exist, add them
+        group.members.push(member);
+        addedMembers.push(member);
+        if (!user.groupNames.includes(_id)) {
+          user.groupNames.push(_id);
+        }
+      }
+
+      await user.save();
     }
 
-    const memberIndex = group.members.findIndex(
-      (m) => m.userId.toString() === member.userId
-    );
-    let isUserAdded;
-
-    if (memberIndex !== -1) {
-      group.members.splice(memberIndex, 1);
-      isUserAdded = false;
-    } else {
-      group.members.push(member);
-      isUserAdded = true;
-    }
     await group.save();
 
-    const groupIndex = user.groupNames.indexOf(_id);
-    if (groupIndex !== -1) {
-      user.groupNames.splice(groupIndex, 1);
-    } else {
-      user.groupNames.push(_id);
-    }
-    await user.save();
-
-    return res.status(200).json({ message: "Group updated successfully", isUserAdded });
+    return res.status(200).json({
+      message: "Group updated successfully",
+      addedMembers,
+      removedMembers,
+    });
   } catch (error) {
     console.error("Error occurred:", error);
     return res.status(500).send("Internal Server Error");
@@ -248,6 +257,7 @@ groupRoutes.put("/:_id", async (req, res) => {
     groupName,
     userId,
     groupLogo,
+    groupPicture,
     members,
     createdAt,
     category,
@@ -264,6 +274,7 @@ groupRoutes.put("/:_id", async (req, res) => {
     if (createdAt) groupToUpdate.createdAt = createdAt;
     if (category) groupToUpdate.category = category;
     if (groupType) groupToUpdate.groupType = groupType;
+    if (groupPicture) groupToUpdate.groupPicture = groupPicture;
     if (isUserAdded) groupToUpdate.isUserAdded = isUserAdded;
 
     const updatedGroup = await Group.findByIdAndUpdate(groupId, groupToUpdate, {

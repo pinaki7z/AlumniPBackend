@@ -9,6 +9,7 @@ const groupSchema = new mongoose.Schema({
     userId: String,
     profilePicture: String,
     userName: String,
+    profileLevel: Number
   }
 ],
   createdAt: Date,
