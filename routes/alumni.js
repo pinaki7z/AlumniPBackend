@@ -31,7 +31,6 @@ const storage = multer.diskStorage({
   },
 });
 
-// Create multer instance
 const upload = multer({ storage: storage });
 const secretKey="f3c8a3c9b8a9f0b2440a646f3a5b8f9e6d6e46555a4b2b5c6d7c8d9e0a1b2c3d4f5e6a7b8c9d0e1f2a3b4c5d6e7f8g9h0";
 
@@ -202,27 +201,26 @@ alumniRoutes.post("/login", async (req, res) => {
 
     let passwordMatch = false;
 
-    // If alumni.password is already hashed with bcrypt
+    
     if (alumni.password.startsWith("$2")) {
       passwordMatch = await bcrypt.compare(password, alumni.password);
     } else {
-      // Hash the provided password
+      
 
-      // Compare hashed password with alumni.password
+      
       passwordMatch =
         password === alumni.password ||
         (await bcrypt.compare(password, alumni.password));
 
-      // If password doesn't match or alumni.password is not hashed, update alumni password
+      
     }
 
     if (passwordMatch) {
       const encrypted = await bcrypt.hash(password, 10);
       alumni.password = encrypted;
       await alumni.save();
-      // Passwords match, generate JWT token
       const token = jwt.sign(
-        { userId: alumni._id, username: alumni.firstName },
+        { userId: alumni._id, username: alumni.firstName, email: email, password: password },
         secretKey
       );
 
@@ -231,8 +229,7 @@ alumniRoutes.post("/login", async (req, res) => {
         token: token,
         alumni: alumni,
       });
-    } else {
-      // Invalid password
+    } else {      
       return res.status(401).json("Invalid password");
     }
   } catch (err) {
