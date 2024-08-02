@@ -6,6 +6,7 @@ const jobsSchema = new mongoose.Schema({
     required: true,
   },
   userName: String,
+  profilePicture: String,
   title:String,
   location:String,
   company: String,

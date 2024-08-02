@@ -6,6 +6,8 @@ const internshipsSchema = new mongoose.Schema({
     required: true,
   },
   title: String,
+  userName: String,
+  profilePicture: String,
   location: String,
   salaryMin: Number,
   salaryMax: Number,
