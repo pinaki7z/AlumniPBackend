@@ -77,4 +77,38 @@ pollRoutes.put("/:_id", async (req, res) => {
   }
 });
 
+pollRoutes.put("/:_id/editPoll", async (req, res) => {
+  const { userId, question, userName, options, profilePicture, groupID } = req.body;
+  const pollId = req.params._id;
+
+  try {
+    const poll = await Poll.findById(pollId);
+
+    if (!poll) {
+      return res.status(404).json({ message: "Poll not found" });
+    }
+
+    
+    if (poll.userId.toString() !== userId) {
+      return res.status(403).json({ message: "You are not authorized to edit this poll" });
+    }
+
+
+    poll.question = question;
+    poll.userName = userName;
+    poll.options = options;
+    poll.profilePicture = profilePicture;
+    poll.groupID = groupID;
+
+
+    const updatedPoll = await poll.save();
+
+    return res.status(200).json({ message: "Poll updated successfully", poll: updatedPoll });
+  } catch (error) {
+    console.error("Error updating poll:", error);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+
 module.exports = pollRoutes;

@@ -149,8 +149,8 @@ postRoutes.get('/', async (req, res) => {
   }
 });
 
-postRoutes.put("/:_id", async (req, res) => {
-  const updatedData = req.body;
+postRoutes.put("/:_id",upload.single("videoPath"), async (req, res) => {
+  const { userId, description,picturePath,groupID,profilePicture } = req.body;
 
   try {
     const post = await Post.findById(req.params._id);
@@ -159,10 +159,30 @@ postRoutes.put("/:_id", async (req, res) => {
       console.error("No such post");
       return res.status(404).send("post not found");
     }
-    Object.assign(post, updatedData);
-    await post.save();
+   
+    const folderName= req.query.folder;
+    const alumni = await Alumni.findById(userId);
+    let videoPath = null;
+ 
+    if (req.file) {
+      videoPath = {
+        videoPath: `http://localhost:3000/uploads/${folderName}/${req.file.originalname}`,
+        name: req.file.filename,
+      };
+    }
 
-    return res.status(200).send("post updated successfully");
+    post.description = description || post.description;
+    post.picturePath = picturePath || post.picturePath;
+    post.groupID = groupID || post.groupID;
+    post.profilePicture = profilePicture || post.profilePicture;
+
+    if (videoPath) {
+      post.videoPath = videoPath;
+    }
+
+    await post.save();
+    return res.status(200).json(post);
+   
   } catch (error) {
     console.error("Error occurred:", error);
     return res.status(500).send("Internal Server Error");
