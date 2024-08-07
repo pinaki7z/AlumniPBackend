@@ -5,6 +5,7 @@ const pollSchema = new mongoose.Schema({
   userName: String,
   profilePicture: String,
   type: String,
+  archive: Boolean,
   question: {
     type: String,
     required: true,

@@ -99,6 +99,7 @@ postRoutes.post("/create", upload.single("videoPath"), async (req, res) => {
       groupID,
       likes: [],
       comments: [],
+      archive: false,
       type: 'Post'
     });
     await newPost.save();
@@ -363,6 +364,35 @@ postRoutes.get("/userPosts/:_id", async (req, res) => {
       success: false,
       message: error.message
     });
+  }
+});
+
+postRoutes.put('/:_id/archive', async (req, res) => {
+  const { _id } = req.params;
+
+  try {
+  
+      const post = await Post.findById(_id);
+
+      if (!post) {
+          return res.status(404).json({ message: 'Post not found' });
+      }
+
+      
+      if (typeof post.archive === 'undefined') {
+        post.archive = true;
+    } else {
+        post.archive = !post.archive;
+    }
+
+
+      await post.save();
+
+    
+      res.status(200).json(post);
+  } catch (error) {
+      console.error('Error archiving/unarchiving post:', error);
+      res.status(500).json({ message: 'Internal server error' });
   }
 });
 

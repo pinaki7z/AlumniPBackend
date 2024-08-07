@@ -31,6 +31,7 @@ const eventSchema = new mongoose.Schema({
   type: String,
   cName: String,
   cNumber: Number,
+  archive: Boolean,
   cEmail: String,
   location: String,
   department: String,

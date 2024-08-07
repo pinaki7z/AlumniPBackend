@@ -37,6 +37,7 @@ const postSchema = mongoose.Schema(
     },
     location: String,
     groupID: String,
+    archive: Boolean,
     description: String,
     picturePath: [String],
     profilePicture: String,

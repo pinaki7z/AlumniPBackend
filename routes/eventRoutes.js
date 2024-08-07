@@ -40,14 +40,14 @@ eventRoutes.post("/createEvent", async (req, res) => {
     cNumber,
     cEmail,
     location,
-    createGroup
+    createGroup,
   } = req.body;
   try {
-    const istStartDate = new Date(start).toISOString(); 
+    const istStartDate = new Date(start).toISOString();
     const istEndDate = new Date(end).toISOString();
 
     const alumni = await Alumni.find({});
-    const emails = alumni.map(alum => alum.email);
+    const emails = alumni.map((alum) => alum.email);
 
     const newEvent = new Event({
       userId,
@@ -60,7 +60,7 @@ eventRoutes.post("/createEvent", async (req, res) => {
       allDay,
       free,
       color,
-      type: 'event',
+      type: "event",
       startTime,
       endTime,
       picture,
@@ -70,9 +70,10 @@ eventRoutes.post("/createEvent", async (req, res) => {
       cEmail,
       location,
       createGroup,
-      createdAt: new Date()
+      archive: false,
+      createdAt: new Date(),
     });
-    if(createGroup){
+    if (createGroup) {
       const user = await Alumni.findById(userId);
       if (!user) {
         return res.status(404).json({
@@ -83,7 +84,8 @@ eventRoutes.post("/createEvent", async (req, res) => {
 
       if (existingGroup) {
         return res.status(400).json({
-          message: "Event Group name already exists. Please choose a different name.",
+          message:
+            "Event Group name already exists. Please choose a different name.",
         });
       }
 
@@ -92,10 +94,10 @@ eventRoutes.post("/createEvent", async (req, res) => {
         groupName: title,
         createdAt: new Date(),
         members: [userId],
-        groupType: 'Private',
-        category: 'Event',
+        groupType: "Private",
+        category: "Event",
         businessConnect: false,
-        department: 'All', 
+        department: "All",
       });
 
       await Alumni.updateMany(
@@ -105,12 +107,10 @@ eventRoutes.post("/createEvent", async (req, res) => {
 
       await newGroup.save();
       await newEvent.save();
-      console.log('new event id', newEvent._id)  
-    }
-    else {
+      console.log("new event id", newEvent._id);
+    } else {
       await newEvent.save();
-      console.log('new event id', newEvent._id)  
-     
+      console.log("new event id", newEvent._id);
     }
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
@@ -122,10 +122,10 @@ eventRoutes.post("/createEvent", async (req, res) => {
     });
 
     const message = {
-      from: "nandannandu254@gmail.com", 
+      from: "nandannandu254@gmail.com",
       to: emails,
       subject: `Invitation to ${newEvent.title}`,
-      text: `You have been invited to the ${newEvent.title} event in the Alumni Portal. Click on this link to see the event details: http://localhost:3000/events/${newEvent._id}`, 
+      text: `You have been invited to the ${newEvent.title} event in the Alumni Portal. Click on this link to see the event details: http://localhost:3000/events/${newEvent._id}`,
     };
 
     transporter.sendMail(message, (err, info) => {
@@ -138,7 +138,7 @@ eventRoutes.post("/createEvent", async (req, res) => {
     });
 
     res.status(201).send(newEvent);
-    console.log('new event id', newEvent._id)  
+    console.log("new event id", newEvent._id);
   } catch (error) {
     console.error(error);
     return res.status(500).send(error);
@@ -158,9 +158,9 @@ eventRoutes.put("/:_id", async (req, res) => {
     }
 
     const istStartDate = new Date(start).toISOString();
-    const istEndDate = new Date(end).toISOString(); 
-    updatedData.start = istStartDate; 
-    updatedData.end = istEndDate; 
+    const istEndDate = new Date(end).toISOString();
+    updatedData.start = istStartDate;
+    updatedData.end = istEndDate;
 
     Object.assign(event, updatedData);
     await event.save();
@@ -176,7 +176,7 @@ eventRoutes.delete("/:_id", async (req, res) => {
   const { _id } = req.params;
   const { groupName } = req.body;
   const alumni = await Alumni.find({});
-  const emails = alumni.map(alum => alum.email);
+  const emails = alumni.map((alum) => alum.email);
 
   try {
     const deletedEvent = await Event.findById(_id);
@@ -187,7 +187,9 @@ eventRoutes.delete("/:_id", async (req, res) => {
       return res.status(404).send("Event not found");
     }
     if (groupName) {
-      const deletedGroup = await Group.findOneAndDelete({ groupName: groupName });
+      const deletedGroup = await Group.findOneAndDelete({
+        groupName: groupName,
+      });
 
       if (!deletedGroup) {
         console.error(`Group '${groupName}' not found`);
@@ -201,14 +203,14 @@ eventRoutes.delete("/:_id", async (req, res) => {
           pass: "hbpl hane patw qzqb",
         },
       });
-  
+
       const message = {
         from: "nandannandu254@gmail.com",
         to: emails,
         subject: `${deletedEvent.title} cancelled`,
         text: `${deletedEvent.title} event has been cancelled`,
       };
-  
+
       transporter.sendMail(message, (err, info) => {
         if (err) {
           console.log("Error occurred. " + err.message);
@@ -246,7 +248,6 @@ eventRoutes.delete("/:_id", async (req, res) => {
     });
 
     return res.status(200).send("Event deleted successfully");
-
   } catch (error) {
     console.error("Error occurred:", error);
     return res.status(500).send("Internal Server Error");
@@ -263,46 +264,42 @@ eventRoutes.delete("/", async (req, res) => {
   }
 });
 
-eventRoutes.put('/attendEvent/:_id', async (req, res) => {
+eventRoutes.put("/attendEvent/:_id", async (req, res) => {
   const eventID = req.params._id;
   const { userId, userName, profilePicture, attendance, groupName } = req.body;
-  console.log('attendance',attendance,groupName);
+  console.log("attendance", attendance, groupName);
 
   try {
     const event = await Event.findById(eventID);
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     const userObject = { userId, userName, profilePicture };
 
-    
     const removeUserFromArray = (array) => {
-      console.log('array remover', array)
-      const index = array.findIndex(user => user.userId === userId);
+      console.log("array remover", array);
+      const index = array.findIndex((user) => user.userId === userId);
       if (index !== -1) {
         array.splice(index, 1);
       }
     };
 
-    
     const addUserToArray = (array) => {
-      console.log('array add',array)
-      if (!array.some(user => user.userId === userId)) {
+      console.log("array add", array);
+      if (!array.some((user) => user.userId === userId)) {
         array.push(userObject);
       }
     };
 
-   
-    if (event.willAttend.some(user => user.userId === userId)) {
+    if (event.willAttend.some((user) => user.userId === userId)) {
       removeUserFromArray(event.willAttend);
-    } else if (event.mightAttend.some(user => user.userId === userId)) {
+    } else if (event.mightAttend.some((user) => user.userId === userId)) {
       removeUserFromArray(event.mightAttend);
-    } else if (event.willNotAttend.some(user => user.userId === userId)) {
+    } else if (event.willNotAttend.some((user) => user.userId === userId)) {
       removeUserFromArray(event.willNotAttend);
     }
 
-   
     if (attendance === 0) {
       addUserToArray(event.willAttend);
     } else if (attendance === 1) {
@@ -310,14 +307,13 @@ eventRoutes.put('/attendEvent/:_id', async (req, res) => {
     } else if (attendance === 2) {
       addUserToArray(event.willNotAttend);
       removeUserFromArray(event.willAttend);
-      removeUserFromArray(event.mightAttend);    
+      removeUserFromArray(event.mightAttend);
     } else {
-      return res.status(400).json({ message: 'Invalid attendance value' });
+      return res.status(400).json({ message: "Invalid attendance value" });
     }
 
     await event.save();
 
-    
     if (groupName) {
       const group = await Group.findOne({ groupName: groupName });
 
@@ -330,7 +326,7 @@ eventRoutes.put('/attendEvent/:_id', async (req, res) => {
           }
         } else if (attendance === 2) {
           if (isMember) {
-            group.members = group.members.filter(member => member !== userId);
+            group.members = group.members.filter((member) => member !== userId);
           }
         }
 
@@ -338,20 +334,23 @@ eventRoutes.put('/attendEvent/:_id', async (req, res) => {
       }
     }
 
-    res.status(200).json({ message: 'Attendance updated successfully', event });
+    res.status(200).json({ message: "Attendance updated successfully", event });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'An error occurred', error });
+    res.status(500).json({ message: "An error occurred", error });
   }
 });
 
-eventRoutes.get('/attendees/:_id', async (req, res) => {
+eventRoutes.get("/attendees/:_id", async (req, res) => {
   try {
     const eventID = req.params._id;
-    const event = await Event.findById(eventID, 'willAttend mightAttend willNotAttend');
+    const event = await Event.findById(
+      eventID,
+      "willAttend mightAttend willNotAttend"
+    );
 
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
     }
 
     res.status(200).json({
@@ -360,30 +359,59 @@ eventRoutes.get('/attendees/:_id', async (req, res) => {
       willNotAttend: event.willNotAttend,
     });
   } catch (error) {
-    console.error('Error fetching attendees:', error);
-    res.status(500).json({ message: 'An error occurred', error });
+    console.error("Error fetching attendees:", error);
+    res.status(500).json({ message: "An error occurred", error });
   }
 });
 
-eventRoutes.get('/:_id', async (req, res) => {
+eventRoutes.get("/:_id", async (req, res) => {
   const eventID = req.params._id;
 
   try {
-    
     const event = await Event.findById(eventID);
 
-    
     if (!event) {
-      return res.status(404).json({ message: 'Event not found' });
+      return res.status(404).json({ message: "Event not found" });
     }
 
-    
     res.status(200).json(event);
-  } catch (error) {    
-    console.error('Error fetching event details:', error);
-    res.status(500).json({ message: 'An error occurred while fetching event details', error });
+  } catch (error) {
+    console.error("Error fetching event details:", error);
+    res
+      .status(500)
+      .json({
+        message: "An error occurred while fetching event details",
+        error,
+      });
   }
 });
 
+eventRoutes.put("/:_id/archive", async (req, res) => {
+  const { _id } = req.params;
+
+  try {
+    // Find the post by ID
+    const event = await Event.findById(_id);
+
+    if (!event) {
+      return res.status(404).json({ message: "Event not found" });
+    }
+
+    if (typeof event.archive === "undefined") {
+      event.archive = true;
+    } else {
+      event.archive = !event.archive;
+    }
+
+    // Save the updated post
+    await event.save();
+
+    // Send the updated post back as a response
+    res.status(200).json(event);
+  } catch (error) {
+    console.error("Error archiving/unarchiving post:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
 
 module.exports = eventRoutes;

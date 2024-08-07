@@ -20,7 +20,8 @@ pollRoutes.post("/createPoll", async (req, res) => {
       options,
       type: "poll",
       profilePicture,
-      groupID
+      groupID,
+      archive: false
     });
 
     const savedPoll = await newPoll.save();
@@ -107,6 +108,35 @@ pollRoutes.put("/:_id/editPoll", async (req, res) => {
   } catch (error) {
     console.error("Error updating poll:", error);
     return res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+pollRoutes.put('/:_id/archive', async (req, res) => {
+  const { _id } = req.params;
+
+  try {
+  
+      const poll = await Poll.findById(_id);
+
+      if (!poll) {
+          return res.status(404).json({ message: 'Poll not found' });
+      }
+
+      
+      if (typeof poll.archive === 'undefined') {
+        poll.archive = true;
+    } else {
+        poll.archive = !poll.archive;
+    }
+
+
+      await poll.save();
+
+    
+      res.status(200).json(poll);
+  } catch (error) {
+      console.error('Error archiving/unarchiving post:', error);
+      res.status(500).json({ message: 'Internal server error' });
   }
 });
 
