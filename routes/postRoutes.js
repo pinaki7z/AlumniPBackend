@@ -30,6 +30,27 @@ const mergeSortAndPaginate = async (page, size) => {
   return paginatedRecords;
 };
 
+const mergeSortAndPaginateArchive = async (page, size) => {
+  const skip = (page - 1) * size;
+
+  // Fetch records where `archive` is true
+  const allPosts = await Post.find({ groupID: { $exists: false }, archive: true }).sort({ createdAt: -1 });
+  const allJobs = await Job.find({ groupID: { $exists: false }, archive: true }).sort({ createdAt: -1 });
+  const allPolls = await Poll.find({ groupID: { $exists: false }, archive: true }).sort({ createdAt: -1 });
+  const allEvents = await Event.find({ archive: true }).sort({ createdAt: -1 });
+
+  // Combine and sort all records by `createdAt`
+  const combinedRecords = [...allPosts, ...allJobs, ...allPolls, ...allEvents]
+    .sort((a, b) => b.createdAt - a.createdAt)
+    .slice(0, skip + size);
+
+  // Paginate the records
+  const paginatedRecords = combinedRecords.slice(skip, skip + size);
+  
+  return paginatedRecords;
+};
+
+
 
 
 const mergeSortAndPaginateUser = async (page,size,id) => {
@@ -137,6 +158,31 @@ postRoutes.get('/', async (req, res) => {
     const totalEvent = await Event.countDocuments();
 
     const combinedRecords = await mergeSortAndPaginate(page, size);
+
+    res.json({
+      records: combinedRecords,
+      total: totalPost+totalJob+totalPoll+totalEvent,
+      size,
+      page,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(400).json(error);
+  }
+});
+
+postRoutes.get('/posts/archive', async (req, res) => {
+  try {
+    const size = parseInt(req.query.size) || 4; 
+    const page = parseInt(req.query.page) || 1; 
+
+    const totalPost = await Post.countDocuments();
+    const totalJob = await Job.countDocuments();
+    const totalPoll = await Poll.countDocuments();
+    const totalEvent = await Event.countDocuments();
+
+    const combinedRecords = await mergeSortAndPaginateArchive(page, size);
+    console.log('combined records',combinedRecords)
 
     res.json({
       records: combinedRecords,
