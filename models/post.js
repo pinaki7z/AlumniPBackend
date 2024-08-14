@@ -51,6 +51,36 @@ const postSchema = mongoose.Schema(
         },
       },
     ],
+    smile: [
+      {
+        userId: {
+          type: String,
+        },
+        userName: {
+          type: String,
+        },
+      },
+    ],
+    clap: [
+      {
+        userId: {
+          type: String,
+        },
+        userName: {
+          type: String,
+        },
+      },
+    ],
+    thumbsUp: [
+      {
+        userId: {
+          type: String,
+        },
+        userName: {
+          type: String,
+        },
+      },
+    ],    
     comments: [commentSchema],
     videoPath: Object,
     type: String

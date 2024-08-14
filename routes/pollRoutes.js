@@ -140,5 +140,22 @@ pollRoutes.put('/:_id/archive', async (req, res) => {
   }
 });
 
+pollRoutes.delete('/:_id', async (req, res) => {
+  const { _id } = req.params;
+
+  try {     
+      const deletedPoll = await Poll.findByIdAndDelete(_id);
+
+      if (!deletedPoll) {
+          return res.status(404).json({ message: 'Poll not found' });
+      }
+
+      res.status(200).json({ message: 'Poll deleted successfully' });
+  } catch (error) {
+      console.error('Error deleting poll:', error);
+      res.status(500).json({ message: 'Server error while deleting poll' });
+  }
+});
+
 
 module.exports = pollRoutes;

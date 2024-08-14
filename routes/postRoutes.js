@@ -5,6 +5,7 @@ const verifyToken = require("../utils");
 const checkProfileLevel = require("../middleware/checkProfileLevel");
 const Post = require("../models/post");
 const Alumni = require("../models/Alumni");
+const Internship = require("../models/internship");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -18,17 +19,21 @@ const postRoutes = express.Router();
 const mergeSortAndPaginate = async (page, size) => {
   const skip = (page - 1) * size;
 
-  const allPosts = await Post.find({ groupID: { $exists: false } }).sort({ createdAt: -1 });
-  const allJobs = await Job.find({ groupID: { $exists: false } }).sort({ createdAt: -1 });
-  const allPolls = await Poll.find({ groupID: { $exists: false } }).sort({ createdAt: -1 });
-  const allEvents = await Event.find().sort({ createdAt: -1 });
-  const combinedRecords = [...allPosts, ...allJobs, ...allPolls,...allEvents]
+  const allPosts = await Post.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
+  const allJobs = await Internship.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
+  const allPolls = await Poll.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
+  const allEvents = await Event.find({ $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
+
+  const combinedRecords = [...allPosts, ...allJobs, ...allPolls, ...allEvents]
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, skip + size);
 
+  // Paginate the records
   const paginatedRecords = combinedRecords.slice(skip, skip + size);
+
   return paginatedRecords;
 };
+
 
 const mergeSortAndPaginateArchive = async (page, size) => {
   const skip = (page - 1) * size;
@@ -269,18 +274,28 @@ postRoutes.patch("/:_id/likes", async (req, res) => {
     const { _id } = req.params;
     const { userId, userName } = req.body;
 
+    // Find the post by its ID
     const post = await Post.findById(_id);
+
+    // Check if the userId is in the likes array
     const isLiked = post.likes.some((like) => like.userId === userId);
 
+    // Remove userId from clap, thumbsUp, and smile arrays if it exists
+    post.clap = post.clap.filter((clap) => clap.userId !== userId);
+    post.thumbsUp = post.thumbsUp.filter((thumbsUp) => thumbsUp.userId !== userId);
+    post.smile = post.smile.filter((smile) => smile.userId !== userId);
+
+    // Add or remove userId from the likes array
     if (isLiked) {
       post.likes = post.likes.filter((like) => like.userId !== userId);
     } else {
       post.likes.push({ userId, userName });
     }
 
+    // Update the post with the new likes array and return the updated post
     const updatedPost = await Post.findByIdAndUpdate(
       _id,
-      { likes: post.likes },
+      { likes: post.likes, clap: post.clap, thumbsUp: post.thumbsUp, smile: post.smile },
       { new: true }
     );
 
@@ -289,6 +304,118 @@ postRoutes.patch("/:_id/likes", async (req, res) => {
     res.status(404).json({ message: err.message });
   }
 });
+
+
+postRoutes.patch("/:_id/thumbsUp", async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const { userId, userName } = req.body;
+
+    // Find the post by its ID
+    const post = await Post.findById(_id);
+
+    // Check if the userId is in the thumbsUp array
+    const isLiked = post.thumbsUp.some((like) => like.userId === userId);
+
+    // Remove userId from likes, clap, and smile arrays if it exists
+    post.likes = post.likes.filter((like) => like.userId !== userId);
+    post.clap = post.clap.filter((clap) => clap.userId !== userId);
+    post.smile = post.smile.filter((smile) => smile.userId !== userId);
+
+    // Add or remove userId from the thumbsUp array
+    if (isLiked) {
+      post.thumbsUp = post.thumbsUp.filter((like) => like.userId !== userId);
+    } else {
+      post.thumbsUp.push({ userId, userName });
+    }
+
+    // Update the post with the new thumbsUp array and return the updated post
+    const updatedPost = await Post.findByIdAndUpdate(
+      _id,
+      { thumbsUp: post.thumbsUp, likes: post.likes, clap: post.clap, smile: post.smile },
+      { new: true }
+    );
+
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+});
+
+
+postRoutes.patch("/:_id/smile", async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const { userId, userName } = req.body;
+
+    // Find the post by its ID
+    const post = await Post.findById(_id);
+
+    // Check if the userId is in the smile array
+    const isLiked = post.smile.some((like) => like.userId === userId);
+
+    // Remove userId from likes, clap, and thumbsUp arrays if it exists
+    post.likes = post.likes.filter((like) => like.userId !== userId);
+    post.clap = post.clap.filter((clap) => clap.userId !== userId);
+    post.thumbsUp = post.thumbsUp.filter((thumbsUp) => thumbsUp.userId !== userId);
+
+    // Add or remove userId from the smile array
+    if (isLiked) {
+      post.smile = post.smile.filter((like) => like.userId !== userId);
+    } else {
+      post.smile.push({ userId, userName });
+    }
+
+    // Update the post with the new smile array and return the updated post
+    const updatedPost = await Post.findByIdAndUpdate(
+      _id,
+      { smile: post.smile, likes: post.likes, clap: post.clap, thumbsUp: post.thumbsUp },
+      { new: true }
+    );
+
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+});
+
+
+postRoutes.patch("/:_id/clap", async (req, res) => {
+  try {
+    const { _id } = req.params;
+    const { userId, userName } = req.body;
+
+    // Find the post by its ID
+    const post = await Post.findById(_id);
+
+    // Check if the userId is in the clap array
+    const isLiked = post.clap.some((like) => like.userId === userId);
+
+    // Remove userId from likes, thumbsUp, and smile arrays if it exists
+    post.likes = post.likes.filter((like) => like.userId !== userId);
+    post.thumbsUp = post.thumbsUp.filter((thumbsUp) => thumbsUp.userId !== userId);
+    post.smile = post.smile.filter((smile) => smile.userId !== userId);
+
+    // Add or remove userId from the clap array
+    if (isLiked) {
+      post.clap = post.clap.filter((like) => like.userId !== userId);
+    } else {
+      post.clap.push({ userId, userName });
+    }
+
+    // Update the post with the new clap array and return the updated post
+    const updatedPost = await Post.findByIdAndUpdate(
+      _id,
+      { clap: post.clap, likes: post.likes, thumbsUp: post.thumbsUp, smile: post.smile },
+      { new: true }
+    );
+
+    res.status(200).json(updatedPost);
+  } catch (err) {
+    res.status(404).json({ message: err.message });
+  }
+});
+
 
 postRoutes.post("/:_id/comments", async (req, res) => {
   try {
