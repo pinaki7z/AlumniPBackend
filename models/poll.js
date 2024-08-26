@@ -10,6 +10,7 @@ const pollSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
+  multipleAnswers: Boolean,
   groupID: String,
   options: [
     {
