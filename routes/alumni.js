@@ -240,16 +240,14 @@ alumniRoutes.post("/login", async (req, res) => {
 
 alumniRoutes.get("/all", async (req, res) => {
   try {
-    const alumni = await Alumni.find();
+    // Use .lean() to improve performance and select only the necessary fields
+    const alumni = await Alumni.find()
+      .select("firstName lastName profilePicture profileLevel _id email workExperience")
+      .lean(); // returns plain JS objects instead of Mongoose documents
 
-    if (!alumni || alumni.length === 0) {
+    if (!alumni.length) {
       console.log("No alumni members available");
       return res.status(404).send("No Alumni Members");
-    }
-
-    if (alumni.length === 0) {
-      console.log("No alumni members ");
-      return res.status(404).send("No Alumni Members ");
     }
 
     return res.status(200).send(alumni);
@@ -258,6 +256,8 @@ alumniRoutes.get("/all", async (req, res) => {
     return res.status(500).send(error);
   }
 });
+
+
 
 alumniRoutes.get(
   "/:alumniId",

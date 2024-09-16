@@ -40,6 +40,7 @@ const apiPort = 5000;
 
 const alumniRoutes = require("./routes/alumni");
 const { clearTimeout } = require("timers");
+const uploadRoutes = require("./routes/upload");
 
 app.use(bodyParser.urlencoded({ extended: true, limit: "100mb" }));
 app.use(bodyParser.json({ extended: true, limit: "100mb" }));
@@ -51,11 +52,11 @@ app.use(
 );
 
 app.use(bodyParser.json({ extended: true, limit: "100mb" }));
+app.use("/uploads",express.static(__dirname + "/uploads"))
 app.use(
   "/uploads",
   express.static(path.join(__dirname, "../test/AlumniFrontend/New folder/public/uploads"))
 );
-app.use("/uploads",express.static(__dirname + "/uploads"))
 db.once("open", () => {
   console.log("Connected to MongoDB");
 });
@@ -85,6 +86,7 @@ app.use("/messages", messageRoutes);
 app.use("/search", searchRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/poll", pollRoutes);
+app.use('/uploadImage',uploadRoutes )
 
 const server = app.listen(apiPort, () => {
   console.log(`Server running on port ${apiPort}`);
