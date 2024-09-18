@@ -19,17 +19,31 @@ const postRoutes = express.Router();
 const mergeSortAndPaginate = async (page, size) => {
   const skip = (page - 1) * size;
 
-  const allPosts = await Post.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
-  const allJobs = await Internship.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
-  const allPolls = await Poll.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
-  const allEvents = await Event.find({ $or: [{ archive: false }, { archive: { $exists: false } }] }).sort({ createdAt: -1 });
+  // Run all database queries in parallel
+  const [posts, jobs, polls, events] = await Promise.all([
+    Post.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
+    Internship.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
+    Poll.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
+    Event.find({ $or: [{ archive: false }, { archive: { $exists: false } }] })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
+  ]);
 
-  const combinedRecords = [...allPosts, ...allJobs, ...allPolls, ...allEvents]
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, skip + size);
+  // Combine the records and sort by createdAt
+  const combinedRecords = [...posts, ...jobs, ...polls, ...events].sort((a, b) => b.createdAt - a.createdAt);
 
   // Paginate the records
-  const paginatedRecords = combinedRecords.slice(skip, skip + size);
+  const paginatedRecords = combinedRecords.slice(0, size);
 
   return paginatedRecords;
 };
@@ -154,19 +168,22 @@ postRoutes.get("/:_id", async (req, res) => {
 
 postRoutes.get('/', async (req, res) => {
   try {
-    const size = parseInt(req.query.size) || 4; 
-    const page = parseInt(req.query.page) || 1; 
+    const size = parseInt(req.query.size) || 4;
+    const page = parseInt(req.query.page) || 1;
 
-    const totalPost = await Post.countDocuments();
-    const totalJob = await Job.countDocuments();
-    const totalPoll = await Poll.countDocuments();
-    const totalEvent = await Event.countDocuments();
+    // Run the count queries in parallel
+    const [totalPost, totalJob, totalPoll, totalEvent] = await Promise.all([
+      Post.countDocuments({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }),
+      Job.countDocuments({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }),
+      Poll.countDocuments({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }),
+      Event.countDocuments({ $or: [{ archive: false }, { archive: { $exists: false } }] }),
+    ]);
 
     const combinedRecords = await mergeSortAndPaginate(page, size);
 
     res.json({
       records: combinedRecords,
-      total: totalPost+totalJob+totalPoll+totalEvent,
+      total: totalPost + totalJob + totalPoll + totalEvent,
       size,
       page,
     });
