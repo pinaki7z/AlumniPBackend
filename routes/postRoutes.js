@@ -17,33 +17,23 @@ const Event = require("../models/Events");
 const postRoutes = express.Router();
 
 const mergeSortAndPaginate = async (page, size) => {
-  const skip = (page - 1) * size;
-
-  // Run all database queries in parallel
+  // Run all database queries in parallel without pagination (skip/limit)
   const [posts, jobs, polls, events] = await Promise.all([
     Post.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(size),
+      .sort({ createdAt: -1 }),
     Internship.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(size),
+      .sort({ createdAt: -1 }),
     Poll.find({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(size),
+      .sort({ createdAt: -1 }),
     Event.find({ $or: [{ archive: false }, { archive: { $exists: false } }] })
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(size),
+      .sort({ createdAt: -1 }),
   ]);
 
-  // Combine the records and sort by createdAt
+  // Combine the records and sort them by createdAt
   const combinedRecords = [...posts, ...jobs, ...polls, ...events].sort((a, b) => b.createdAt - a.createdAt);
 
-  // Paginate the records
-  const paginatedRecords = combinedRecords.slice(0, size);
+  // Apply pagination manually
+  const paginatedRecords = combinedRecords.slice((page - 1) * size, page * size);
 
   return paginatedRecords;
 };
@@ -113,19 +103,49 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-postRoutes.post("/create", upload.single("videoPath"), async (req, res) => {
+// postRoutes.post("/create", upload.single("videoPath"), async (req, res) => {
+//   try {
+//     const { userId, description,picturePath,groupID,profilePicture } = req.body;
+//     const folderName= req.query.folder;
+//     const alumni = await Alumni.findById(userId);
+//     let videoPath = null;
+ 
+//     if (req.file) {
+//       videoPath = {
+//         videoPath: `http://localhost:3000/uploads/${folderName}/${req.file.originalname}`,
+//         name: req.file.filename,
+//       };
+//     }
+
+//     const newPost = new Post({
+//       userId,
+//       firstName: alumni.firstName,
+//       lastName: alumni.lastName,
+//       location: alumni.location,
+//       picturePath,
+//       profilePicture,
+//       description,
+//       videoPath,
+//       groupID,
+//       likes: [],
+//       comments: [],
+//       archive: false,
+//       type: 'Post'
+//     });
+//     await newPost.save();
+
+//     const post = await Post.find();
+//     res.status(201).json(post);
+//   } catch (err) {
+//     res.status(409).json({ message: err.message });
+//   }
+// });
+
+postRoutes.post("/create", async (req, res) => {
   try {
-    const { userId, description,picturePath,groupID,profilePicture } = req.body;
+    const { userId, description,picturePath,groupID,profilePicture,videoPath } = req.body;
     const folderName= req.query.folder;
     const alumni = await Alumni.findById(userId);
-    let videoPath = null;
- 
-    if (req.file) {
-      videoPath = {
-        videoPath: `http://localhost:3000/uploads/${folderName}/${req.file.originalname}`,
-        name: req.file.filename,
-      };
-    }
 
     const newPost = new Post({
       userId,
@@ -144,8 +164,8 @@ postRoutes.post("/create", upload.single("videoPath"), async (req, res) => {
     });
     await newPost.save();
 
-    const post = await Post.find();
-    res.status(201).json(post);
+    // const post = await Post.find();
+    res.status(201).json(newPost);
   } catch (err) {
     res.status(409).json({ message: err.message });
   }
