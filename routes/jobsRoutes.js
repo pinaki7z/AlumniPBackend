@@ -177,14 +177,14 @@ jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
 jobRoutes.get("/", async (req, res) => {
   try {
     // Query jobs and internships separately
-    const jobs = await Job.find().sort({ createdAt: -1 });
+    //const jobs = await Job.find().sort({ createdAt: -1 });
     const internships = await Internship.find().sort({ createdAt: -1 });
 
     // Combine jobs and internships into a single array
-    const allDocuments = [...jobs, ...internships];
+    const allDocuments = [...internships];
 
     // Sort the combined array by creation date in descending order
-    allDocuments.sort((a, b) => b.createdAt - a.createdAt);
+    //allDocuments.sort((a, b) => b.createdAt - a.createdAt);
 
     return res.status(200).send(allDocuments);
   } catch (error) {
