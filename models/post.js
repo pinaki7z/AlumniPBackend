@@ -36,6 +36,7 @@ const postSchema = mongoose.Schema(
       required: true,
     },
     location: String,
+    userName: String,
     groupID: String,
     archive: Boolean,
     description: String,

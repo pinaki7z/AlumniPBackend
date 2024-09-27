@@ -7,6 +7,7 @@ let AlumniSchema = new Schema(
       type: String,
       // required: true
     },
+    userName: String,
     lastName: {
       type: String,
       // required: true

@@ -23,6 +23,11 @@ const internshipsSchema = new mongoose.Schema({
   coverImage:String,
   starred: [String],
   type: String,
+  locationType: {
+    onSite: Boolean,
+    remote: Boolean,
+    hybrid: Boolean
+  },
   approved: Boolean,
   appliedCandidates: [{
     userId: String,

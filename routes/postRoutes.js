@@ -13,6 +13,7 @@ const url = require("url");
 const Job = require("../models/job");
 const Poll = require("../models/poll");
 const Event = require("../models/Events");
+const mongoose = require('mongoose');
 
 const postRoutes = express.Router();
 
@@ -29,14 +30,44 @@ const mergeSortAndPaginate = async (page, size) => {
       .sort({ createdAt: -1 }),
   ]);
 
-  // Combine the records and sort them by createdAt
-  const combinedRecords = [...posts, ...jobs, ...polls, ...events].sort((a, b) => b.createdAt - a.createdAt);
+  // Combine the records
+  let combinedRecords = [...posts, ...jobs, ...polls, ...events];
+
+  // Fetch the latest userName and profilePicture from the Alumni collection for each record
+  combinedRecords = await Promise.all(
+    combinedRecords.map(async (record) => {
+      let userName = '';
+      let profilePicture = '';
+      
+      if (record.userId) {
+        const recId = new mongoose.Types.ObjectId(record.userId);
+        const alumni = await Alumni.findOne({ _id: recId }, 'firstName lastName profilePicture');
+        if (alumni) {
+          console.log('alumni',alumni._id)
+          userName = `${alumni.firstName} ${alumni.lastName}`;
+          profilePicture = alumni.profilePicture;
+        }
+      }
+
+      // Return the record along with updated userName and profilePicture
+      return {
+        ...record._doc, // Spreads the post/job/event details
+        userName: userName || record.userName, // Updates userName if found, otherwise keeps the existing one
+        profilePicture: profilePicture || record.profilePicture, // Updates profilePicture if found
+      };
+    })
+  );
+
+  // Sort combined records by createdAt date
+  combinedRecords = combinedRecords.sort((a, b) => b.createdAt - a.createdAt);
 
   // Apply pagination manually
   const paginatedRecords = combinedRecords.slice((page - 1) * size, page * size);
 
   return paginatedRecords;
 };
+
+
 
 
 const mergeSortAndPaginateArchive = async (page, size) => {
@@ -191,7 +222,7 @@ postRoutes.get('/', async (req, res) => {
     const size = parseInt(req.query.size) || 4;
     const page = parseInt(req.query.page) || 1;
 
-    // Run the count queries in parallel
+    
     const [totalPost, totalJob, totalPoll, totalEvent] = await Promise.all([
       Post.countDocuments({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }),
       Job.countDocuments({ groupID: { $exists: false }, $or: [{ archive: false }, { archive: { $exists: false } }] }),
@@ -200,6 +231,7 @@ postRoutes.get('/', async (req, res) => {
     ]);
 
     const combinedRecords = await mergeSortAndPaginate(page, size);
+    
 
     res.json({
       records: combinedRecords,
