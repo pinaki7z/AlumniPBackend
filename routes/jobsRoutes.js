@@ -134,6 +134,7 @@ jobRoutes.post("/create",async (req, res) => {
         location,
         locationType,
         type,
+        company,
         coverImage,
         archive: false,
         starred: [],

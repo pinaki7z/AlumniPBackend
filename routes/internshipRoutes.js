@@ -49,6 +49,7 @@ internshipRoutes.post("/create", upload.array('attachments', 5), async (req, res
       employmentType,
       duration,
       currency,
+      company,
       picture,
       salaryMin,
       salaryMax,
