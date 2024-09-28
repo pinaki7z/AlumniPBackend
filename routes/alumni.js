@@ -242,11 +242,9 @@ alumniRoutes.get("/all", async (req, res) => {
   try {
     // Use .lean() to improve performance and select only the necessary fields
     const alumni = await Alumni.find()
-      .select("firstName lastName profilePicture profileLevel _id email workExperience")
+      .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted")
       .lean(); // returns plain JS objects instead of Mongoose documents
-
     if (!alumni.length) {
-      console.log("No alumni members available");
       return res.status(404).send("No Alumni Members");
     }
 
@@ -459,7 +457,7 @@ alumniRoutes.delete("/:alumniId", verifyToken, async (req, res) => {
     }
 
     if (alumni.accountDeleted) {
-      console.error("Account is already deleted");
+      // console.error("Account is already deleted");
 
       const updatedAlumni = await Alumni.findOneAndUpdate(
         { _id: req.params.alumniId },
