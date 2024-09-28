@@ -193,7 +193,7 @@ groupRoutes.get("/groups/popular", async (req, res) => {
 groupRoutes.put("/members/:_id", async (req, res) => {
   const { members, notificationId } = req.body;
   const { _id } = req.params;
-  console.log('members', members);
+
   try {
     if (notificationId) {
       await Notification.findByIdAndDelete(notificationId);
@@ -208,11 +208,24 @@ groupRoutes.put("/members/:_id", async (req, res) => {
     let addedMembers = [];
     let removedMembers = [];
 
-    for (let member of members) {
+    // Normalize members to always be an array, whether it's a single object or already an array
+    const membersArray = !members
+      ? [] // Handle null or undefined members
+      : Array.isArray(members)
+        ? members // Already an array, use as is
+        : [members]; // Single object, wrap in an array
+
+    for (let member of membersArray) {
+      // Ensure that member object exists and has userId
+      if (!member || !member.userId) {
+        console.error("Invalid member or missing userId", member);
+        continue;
+      }
+
       const user = await Alumni.findById(member.userId);
       if (!user) {
         console.error(`No such user with ID: ${member.userId}`);
-        continue; 
+        continue;
       }
 
       const memberIndex = group.members.findIndex((m) => m.userId.toString() === member.userId);
@@ -249,6 +262,7 @@ groupRoutes.put("/members/:_id", async (req, res) => {
     return res.status(500).send("Internal Server Error");
   }
 });
+
 
 
 groupRoutes.put("/:_id", async (req, res) => {

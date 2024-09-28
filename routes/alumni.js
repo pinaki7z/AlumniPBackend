@@ -242,7 +242,7 @@ alumniRoutes.get("/all", async (req, res) => {
   try {
     // Use .lean() to improve performance and select only the necessary fields
     const alumni = await Alumni.find()
-      .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted")
+      .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted graduatingYear class groupNames")
       .lean(); // returns plain JS objects instead of Mongoose documents
     if (!alumni.length) {
       return res.status(404).send("No Alumni Members");
@@ -315,9 +315,7 @@ alumniRoutes.put("/:alumniId", verifyToken, async (req, res) => {
 
     if (student === true) {
       updatedData.profileLevel = 3;
-    } else if (student === false) {
-      updatedData.profileLevel = 2;
-    }
+    } 
 
     delete updatedData.oldPassword;
     delete updatedData.newPassword;

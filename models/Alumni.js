@@ -111,6 +111,7 @@ let AlumniSchema = new Schema(
     graduatingYear: Number,
     jobRole: String,
     class: Number,
+    graduatedFromClass: Number,
     city: String,
     accountDeleted: Boolean,
     country: String,
