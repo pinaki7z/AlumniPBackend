@@ -40,7 +40,7 @@ const fileFilter = (req, file, cb) => {
 // Multer upload middleware
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
+jobRoutes.post("/create",async (req, res) => {
   try {
     const {
       userId,
@@ -58,13 +58,14 @@ jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
       location,
       type,
       userName,
+      attachments,
       locationType,
       profilePicture
     } = req.body;
 
     console.log("request body", req.body);
 
-    const attachmentNames = req.files.map((file) => file.filename);
+    //const attachmentNames = req.files.map((file) => file.filename);
     if (type === "Job") {
       console.log("job post");
       const newJob = new Job({
@@ -81,7 +82,7 @@ jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
         location,
         company,
         coverImage,
-        attachments: attachmentNames,
+        attachments,
         type,
         archive: false,
         starred: [],
@@ -93,29 +94,29 @@ jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
 
       const savedJob = await newJob.save();
 
-      const alumni = await Alumni.findOne({ _id: userId });
-      const admin = await Alumni.findOne({
-        profileLevel: 1,
-        department: alumni.department,
-      });
+      // const alumni = await Alumni.findOne({ _id: userId });
+      // const admin = await Alumni.findOne({
+      //   profileLevel: 1,
+      //   department: alumni.department,
+      // });
 
-      if (admin) {
-        const newNotification = new Notification({
-          userId: userId,
-          requestedUserName: alumni.firstName,
-          ownerId: admin._id,
-          status: false,
-          job: true,
-          jobId: savedJob._id,
-        });
-        await newNotification.save();
-      } else {
-        console.error("Admin not found for the department");
-        await Job.deleteOne({ _id: savedJob._id });
-        return res
-          .status(400)
-          .json({ error: "Admin not found for the department" });
-      }
+      // if (admin) {
+      //   const newNotification = new Notification({
+      //     userId: userId,
+      //     requestedUserName: alumni.firstName,
+      //     ownerId: admin._id,
+      //     status: false,
+      //     job: true,
+      //     jobId: savedJob._id,
+      //   });
+      //   await newNotification.save();
+      // } else {
+      //   console.error("Admin not found for the department");
+      //   await Job.deleteOne({ _id: savedJob._id });
+      //   return res
+      //     .status(400)
+      //     .json({ error: "Admin not found for the department" });
+      // }
     } else if (type === "Internship") {
       console.log("internship post");
       const newInternship = new Internship({
@@ -129,8 +130,9 @@ jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
         currency,
         salaryMin,
         salaryMax,
-        attachments: attachmentNames,
+        attachments,
         location,
+        locationType,
         type,
         coverImage,
         archive: false,
@@ -141,30 +143,30 @@ jobRoutes.post("/create", upload.array("attachments", 5), async (req, res) => {
       });
       const savedInternship = await newInternship.save();
 
-      const alumni = await Alumni.findOne({ _id: userId });
-      const admin = await Alumni.findOne({
-        profileLevel: 1,
-        department: alumni.department,
-      });
+      // const alumni = await Alumni.findOne({ _id: userId });
+      // const admin = await Alumni.findOne({
+      //   profileLevel: 1,
+      //   department: alumni.department,
+      // });
 
-      if (admin) {
-        const newNotification = new Notification({
-          userId: userId,
-          requestedUserName: alumni.firstName,
-          ownerId: admin._id,
-          status: false,
-          job: false,
-          jobId: savedInternship._id,
-        });
-        await newNotification.save();
-      } else {
-        console.error("Admin not found for the department");
+      // if (admin) {
+      //   const newNotification = new Notification({
+      //     userId: userId,
+      //     requestedUserName: alumni.firstName,
+      //     ownerId: admin._id,
+      //     status: false,
+      //     job: false,
+      //     jobId: savedInternship._id,
+      //   });
+      //   await newNotification.save();
+      // } else {
+      //   console.error("Admin not found for the department");
 
-        await Internship.deleteOne({ _id: savedInternship._id });
-        return res
-          .status(400)
-          .json({ error: "Admin not found for the department" });
-      }
+      //   await Internship.deleteOne({ _id: savedInternship._id });
+      //   return res
+      //     .status(400)
+      //     .json({ error: "Admin not found for the department" });
+      // }
     }
 
     return res.status(201).json({ message: "Success" });
