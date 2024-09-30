@@ -20,8 +20,7 @@ const searchRoutes = require("./routes/searchRoutes")
 const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const pollRoutes = require("./routes/pollRoutes");
-// const forgotPass = require("./routes/forgotPass");
-
+const forgotPassRoutes = require("./routes/forgotPass")
 
 
 
@@ -88,7 +87,7 @@ app.use("/search", searchRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/poll", pollRoutes);
 app.use('/uploadImage',uploadRoutes )
-// app.use('/forgotPass',forgotPass )
+app.use('/forgotPass',forgotPassRoutes)
 
 const server = app.listen(apiPort, () => {
   console.log(`Server running on port ${apiPort}`);

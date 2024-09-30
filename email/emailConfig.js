@@ -5,11 +5,12 @@ const path = require('path');
 
 // Nodemailer configuration
 const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
+  // host: 'smtp.gmail.com',
+  host: "smtp.gmail.com",
   port: 587,
   auth: {
-    user: "nandannandu254@gmail.com",
-    pass: "hbpl hane patw qzqb",
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
   },
 });
 
