@@ -355,78 +355,62 @@ jobRoutes.post("/apply/:_id", upload.single("resume"), async (req, res) => {
   const resumeFileName = req.file.filename;
   const appliedAt = new Date();
   console.log('request body', req.body);
+  console.log('answers', answers);
+  let formattedAnswers = [];
 
-  // Convert answers array to the desired format
-  const formattedAnswers = answers.map(answer => ({
+ 
+  if (answers && Array.isArray(answers)) {
+    formattedAnswers = answers.map(answer => ({
       question: answer.question,
       answer: answer.answer
-  }));
-
-  console.log('formatted answers', formattedAnswers)
+    }));
+    console.log('formatted answers', formattedAnswers);
+  }
 
   try {
-
-      const job = await Job.findOneAndUpdate(
-          { _id },
-          {
-              $push: {
-                  appliedCandidates: {
-                      userId,
-                      name,
-                      resume: resumeFileName,
-                      appliedAt,
-                      answers: formattedAnswers
-                  },
-              },
+    const internship = await Internship.findOneAndUpdate(
+      { _id },
+      {
+        $push: {
+          appliedCandidates: {
+            userId,
+            name,
+            resume: resumeFileName,
+            appliedAt,
+            answers: formattedAnswers // Use formatted answers
           },
-          { new: true }
-      );
+        },
+      },
+      { new: true }
+    );
 
-      const internship = await Internship.findOneAndUpdate(
-          { _id },
-          {
-              $push: {
-                  appliedCandidates: {
-                      userId,
-                      name,
-                      resume: resumeFileName,
-                      appliedAt,
-                      answers: formattedAnswers // Use formatted answers
-                  },
-              },
+    if (!internship) {
+      return res.status(404).json({ message: "Internship post not found" });
+    }
+
+    const user = await Alumni.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          appliedJobs: {
+            jobId: _id,
+            status: "none",
           },
-          { new: true }
-      );
+        },
+      },
+      { new: true }
+    );
 
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-      if (!job && !internship) {
-          return res.status(404).json({ message: "Job or Internship post not found" });
-      }
-
-
-      const user = await Alumni.findByIdAndUpdate(
-          userId,
-          {
-              $push: {
-                  appliedJobs: {
-                      jobId: _id,
-                      status: "none",
-                  },
-              },
-          },
-          { new: true }
-      );
-
-      if (!user) {
-          return res.status(404).json({ message: "User not found" });
-      }
-
-      return res
-          .status(200)
-          .json({ message: "Application submitted successfully" });
+    return res
+      .status(200)
+      .json({ message: "Application submitted successfully" });
   } catch (error) {
-      console.error("Error applying for job:", error);
-      return res.status(500).json({ message: "Internal server error" });
+    console.error("Error applying for job:", error);
+    return res.status(500).json({ message: "Internal server error" });
   }
 });
 
