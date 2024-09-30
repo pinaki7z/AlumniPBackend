@@ -9,7 +9,7 @@ router.post("/", async (req, res) => {
 
   try {
     // Find the user by email
-    const user = await Alumni.findOne({ email });
+    const user = await Alumni.findOne({ email }); 
 
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
