@@ -527,46 +527,45 @@ alumniRoutes.post("/alumni/verify-otp", async (req, res) => {
 });
 
 alumniRoutes.post("/alumni/generate-otp", async (req, res) => {
-  const { email, userId } = req.body;
+  const { email } = req.body;
 
-  if (!email || !userId) {
-    return res.status(400).json({ message: "Email and userId are required" });
+  if (!email) {
+    return res.status(400).json({ message: "Email is required" });
   }
 
-  const otp = generateOTP();
-  
+  const otp = generateOTP(); // Generate OTP
 
   try {
-    const id = new mongoose.Types.ObjectId(userId);
-    const user = await Alumni.findByIdAndUpdate(
-      id,
-      { otp }, 
-      { new: true } 
+    // Find user by email and update OTP
+    const user = await Alumni.findOneAndUpdate(
+      { email }, // Search by email
+      { otp },   // Update OTP field
+      { new: true } // Return the updated user
     );
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    
+    // Set up nodemailer transporter with Gmail
     const transporter = nodemailer.createTransport({
       host: "smtp.gmail.com",
       port: 587,
       auth: {
-        user: process.env.EMAIL_USER, 
-        pass: process.env.EMAIL_PASS, 
+        user: process.env.EMAIL_USER, // Sender's email from env
+        pass: process.env.EMAIL_PASS, // Sender's password from env
       },
     });
 
-    
+    // Email message
     let message = {
-      from: "technology@insideoutconsult.com", 
-      to: email,
+      from: "technology@insideoutconsult.com", // Sender address
+      to: email, // Receiver's email
       subject: "OTP for Resetting Password",
       text: `Your OTP for resetting the password is ${otp}. It is valid for the next 10 minutes.`,
     };
 
-    
+    // Send email
     transporter.sendMail(message, (err, info) => {
       if (err) {
         console.log("Error occurred: " + err.message);
@@ -575,7 +574,7 @@ alumniRoutes.post("/alumni/generate-otp", async (req, res) => {
 
       console.log("Message sent: %s", info.messageId);
 
-      
+      // Respond with success message
       return res.status(200).json({ message: "OTP sent successfully" });
     });
   } catch (error) {
@@ -585,40 +584,42 @@ alumniRoutes.post("/alumni/generate-otp", async (req, res) => {
 });
 
 alumniRoutes.put("/alumni/reset-password", async (req, res) => {
-  const { newPassword, confirmNewPassword, userId } = req.body;
+  const { newPassword, confirmNewPassword, email } = req.body;
 
-  
-  if (!newPassword || !confirmNewPassword || !userId) {
+  // Check if all required fields are present
+  if (!newPassword || !confirmNewPassword || !email) {
     return res.status(400).json({ message: "All fields are required" });
   }
 
-  
+  // Check if passwords match
   if (newPassword !== confirmNewPassword) {
     return res.status(400).json({ message: "Passwords do not match" });
   }
 
   try {
-    
+    // Encrypt the new password
     const encryptedPassword = await bcrypt.hash(newPassword, 10);
 
-    const id = new mongoose.Types.ObjectId(userId);
-    const updatedUser = await Alumni.findByIdAndUpdate(
-      id,
-      { password: encryptedPassword }, 
-      { new: true } 
+    // Find the user by email and update their password
+    const updatedUser = await Alumni.findOneAndUpdate(
+      { email }, // Search for the user by email
+      { password: encryptedPassword }, // Update password
+      { new: true } // Return the updated document
     );
 
+    // Check if user was found and updated
     if (!updatedUser) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    
+    // Return success message
     return res.status(200).json({ message: "Password reset successfully" });
   } catch (error) {
     console.error("Error resetting password:", error);
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 alumniRoutes.get("/", async (req, res) => {
   try {
