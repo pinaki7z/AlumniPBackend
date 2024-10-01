@@ -553,8 +553,8 @@ alumniRoutes.post("/alumni/generate-otp", async (req, res) => {
       host: "smtp.gmail.com",
       port: 587,
       auth: {
-        user: "sahilgagan227@gmail.com", 
-        pass: "jxgc xmos xwjp kvyf", 
+        user: process.env.EMAIL_USER, 
+        pass: process.env.EMAIL_PASS, 
       },
     });
 
