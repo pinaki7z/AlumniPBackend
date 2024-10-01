@@ -14,6 +14,7 @@ const mongoose = require("mongoose");
 const Notification = require("../models/notification");
 const Company = require("../models/company");
 const schedule = require("node-schedule");
+const sendEmail = require('../email/emailConfig');
 //const csv = require('csv-parser');
 
 const randomstring = require("randomstring");
@@ -35,9 +36,10 @@ const upload = multer({ storage: storage });
 const secretKey="f3c8a3c9b8a9f0b2440a646f3a5b8f9e6d6e46555a4b2b5c6d7c8d9e0a1b2c3d4f5e6a7b8c9d0e1f2a3b4c5d6e7f8g9h0";
 
 const generateOTP = () => {
-  const otp = Math.floor(100000 + Math.random() * 900000);
+  const otp = Math.floor(1000 + Math.random() * 9000); 
   return otp.toString();
 };
+
 alumniRoutes.post(
   "/register",
   validateEmail,
@@ -494,7 +496,7 @@ alumniRoutes.delete("/:alumniId", verifyToken, async (req, res) => {
   }
 });
 
-alumniRoutes.post("/verify-otp", async (req, res) => {
+alumniRoutes.post("/alumni/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   try {
@@ -521,6 +523,100 @@ alumniRoutes.post("/verify-otp", async (req, res) => {
   } catch (error) {
     console.error("Error occurred:", error);
     return res.status(500).send("Internal Server Error");
+  }
+});
+
+alumniRoutes.post("/alumni/generate-otp", async (req, res) => {
+  const { email, userId } = req.body;
+
+  if (!email || !userId) {
+    return res.status(400).json({ message: "Email and userId are required" });
+  }
+
+  const otp = generateOTP();
+  
+
+  try {
+    const id = new mongoose.Types.ObjectId(userId);
+    const user = await Alumni.findByIdAndUpdate(
+      id,
+      { otp }, 
+      { new: true } 
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    
+    const transporter = nodemailer.createTransport({
+      host: "smtp.gmail.com",
+      port: 587,
+      auth: {
+        user: "sahilgagan227@gmail.com", 
+        pass: "jxgc xmos xwjp kvyf", 
+      },
+    });
+
+    
+    let message = {
+      from: "technology@insideoutconsult.com", 
+      to: email,
+      subject: "OTP for Resetting Password",
+      text: `Your OTP for resetting the password is ${otp}. It is valid for the next 10 minutes.`,
+    };
+
+    
+    transporter.sendMail(message, (err, info) => {
+      if (err) {
+        console.log("Error occurred: " + err.message);
+        return res.status(500).json({ message: "Error sending OTP" });
+      }
+
+      console.log("Message sent: %s", info.messageId);
+
+      
+      return res.status(200).json({ message: "OTP sent successfully" });
+    });
+  } catch (error) {
+    console.error("Error occurred:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
+  }
+});
+
+alumniRoutes.put("/alumni/reset-password", async (req, res) => {
+  const { newPassword, confirmNewPassword, userId } = req.body;
+
+  
+  if (!newPassword || !confirmNewPassword || !userId) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
+
+  
+  if (newPassword !== confirmNewPassword) {
+    return res.status(400).json({ message: "Passwords do not match" });
+  }
+
+  try {
+    
+    const encryptedPassword = await bcrypt.hash(newPassword, 10);
+
+    const id = new mongoose.Types.ObjectId(userId);
+    const updatedUser = await Alumni.findByIdAndUpdate(
+      id,
+      { password: encryptedPassword }, 
+      { new: true } 
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    
+    return res.status(200).json({ message: "Password reset successfully" });
+  } catch (error) {
+    console.error("Error resetting password:", error);
+    return res.status(500).json({ message: "Internal Server Error" });
   }
 });
 
