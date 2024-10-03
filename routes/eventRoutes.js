@@ -116,8 +116,8 @@ eventRoutes.post("/createEvent", async (req, res) => {
       host: "smtp.gmail.com",
       port: 587,
       auth: {
-        user: "nandannandu254@gmail.com",
-        pass: "hbpl hane patw qzqb",
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
       },
     });
 
@@ -125,8 +125,9 @@ eventRoutes.post("/createEvent", async (req, res) => {
       from: "nandannandu254@gmail.com",
       to: emails,
       subject: `Invitation to ${newEvent.title}`,
-      text: `You have been invited to the ${newEvent.title} event in the Alumni Portal. Click on this link to see the event details: http://localhost:3000/events/${newEvent._id}`,
+      text: `You have been invited to the ${newEvent.title} event in the Alumni Portal. Click on this link to see the event details: ${process.env.CLIENT_URL}/events/${newEvent._id}`,
     };
+    
 
     transporter.sendMail(message, (err, info) => {
       if (err) {
