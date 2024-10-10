@@ -349,6 +349,23 @@ alumniRoutes.put("/:alumniId", verifyToken, async (req, res) => {
         department: alumni.department,
       });
 
+      const superAdmin = await Alumni.findOne({
+        profileLevel: 0
+      });
+
+      if (superAdmin) {
+        const userName = `${alumni.firstName} ${alumni.lastName}`;
+        const newNotification = new Notification({
+          userId: alumni._id,
+          requestedUserName: userName,
+          ownerId: superAdmin._id,
+          ID: ID,
+          status: false,
+        });
+
+        await newNotification.save();
+      }
+
       if (admin) {
         const userName = `${alumni.firstName} ${alumni.lastName}`;
         const newNotification = new Notification({
