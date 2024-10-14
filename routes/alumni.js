@@ -79,6 +79,7 @@ alumniRoutes.post(
       alumni,
       student,
       appliedJobs,
+      linkedIn,
       expirationDate,
     } = req.body;
     let { otp, status, profileLevel } = req.body;
@@ -128,6 +129,7 @@ alumniRoutes.post(
         workingAt,
         companyWebsite,
         aboutMe,
+        linkedIn,
         department,
         batch: batch ? batch : null,
         city,

@@ -15,6 +15,7 @@ let AlumniSchema = new Schema(
     graduation_year: {
       type: Number,
     },
+    linkedIn: String,
     graduation_degree: {
       type: String,
     },
