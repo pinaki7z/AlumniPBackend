@@ -250,7 +250,7 @@ alumniRoutes.get("/all", async (req, res) => {
   try {
     // Use .lean() to improve performance and select only the necessary fields
     const alumni = await Alumni.find()
-      .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted graduatingYear class groupNames")
+      .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted graduatingYear class groupNames linkedIn")
       .lean(); // returns plain JS objects instead of Mongoose documents
     if (!alumni.length) {
       return res.status(404).send("No Alumni Members");
