@@ -60,7 +60,8 @@ jobRoutes.post("/create",async (req, res) => {
       userName,
       attachments,
       locationType,
-      profilePicture
+      profilePicture,
+      verified
     } = req.body;
 
     console.log("request body", req.body);
@@ -89,10 +90,12 @@ jobRoutes.post("/create",async (req, res) => {
         approved: false,
         locationType,
         userName,
-        profilePicture
+        profilePicture,
+        verified
       });
 
       const savedJob = await newJob.save();
+      console.log('job saved', savedJob)
 
       // const alumni = await Alumni.findOne({ _id: userId });
       // const admin = await Alumni.findOne({
@@ -140,7 +143,8 @@ jobRoutes.post("/create",async (req, res) => {
         starred: [],
         approved: false,
         userName,
-        profilePicture
+        profilePicture,
+        verified
       });
       const savedInternship = await newInternship.save();
 

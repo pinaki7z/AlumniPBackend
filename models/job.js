@@ -18,6 +18,7 @@ const jobsSchema = new mongoose.Schema({
   duration: String,
   employmentType: String,
   category: String,
+  verified: Boolean,
   questions: [],
   answers: {
     question: String,
