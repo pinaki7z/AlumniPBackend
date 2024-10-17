@@ -78,6 +78,7 @@ alumniRoutes.post(
       admin,
       alumni,
       student,
+      specialRole,
       appliedJobs,
       linkedIn,
       expirationDate,
@@ -103,7 +104,7 @@ alumniRoutes.post(
         newExpirationDate.setDate(currentDate.getDate() + 7);
       }
 
-      const profileLevelValue = admin ? 1 : alumni ? 2 : student ? 3 : null;
+      const profileLevelValue = admin ? 1 : alumni ? 2 : student ? 3 : specialRole ? 4 :null;
 
       const newAlumni = new Alumni({
         firstName,
@@ -248,10 +249,9 @@ alumniRoutes.post("/login", async (req, res) => {
 
 alumniRoutes.get("/all", async (req, res) => {
   try {
-    // Use .lean() to improve performance and select only the necessary fields
     const alumni = await Alumni.find()
       .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted graduatingYear class groupNames linkedIn department batch")
-      .lean(); // returns plain JS objects instead of Mongoose documents
+      .lean(); 
     if (!alumni.length) {
       return res.status(404).send("No Alumni Members");
     }
