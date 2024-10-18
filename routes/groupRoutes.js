@@ -10,6 +10,7 @@ const multer = require("multer");
 const path = require("path");
 const Post = require("../models/post");
 const Poll = require("../models/poll");
+const Event = require("../models/Events");
 const Job = require("../models/job");
 
 const groupRoutes = express.Router();
@@ -39,21 +40,51 @@ const fileFilter = (req, file, cb) => {
 
 const upload = multer({ storage: storage, fileFilter: fileFilter });
 
-const mergeSortAndPaginate = async (page, size,groupID) => {
+const mergeSortAndPaginate = async (page, size, groupID) => {
   const skip = (page - 1) * size;
 
-  const allPosts = await Post.find({ groupID }).sort({ createdAt: -1 });
-  //const allJobs = await Job.find({ groupID}).sort({ createdAt: -1 });
-  const allPolls = await Poll.find({ groupID }).sort({ createdAt: -1 });
+  // Fetch the total number of documents for each collection
+  const [totalPosts, totalPolls, totalEvents] = await Promise.all([
+    Post.countDocuments({ groupID }),
+    Poll.countDocuments({ groupID }),
+    Event.countDocuments({ groupId: groupID }),
+  ]);
 
-  
-  const combinedRecords = [...allPosts, ...allPolls]
-    .sort((a, b) => b.createdAt - a.createdAt)
-    .slice(0, skip + size);
+  // Fetch the actual paginated records from each collection
+  const [posts, polls, events] = await Promise.all([
+    Post.find({ groupID })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
 
-  const paginatedRecords = combinedRecords.slice(skip, skip + size);
-  return paginatedRecords;
+    Poll.find({ groupID })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
+
+    Event.find({ groupId: groupID })
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(size),
+  ]);
+
+  // Combine the records and sort them by createdAt
+  const combinedRecords = [...posts, ...polls, ...events]
+    .sort((a, b) => b.createdAt - a.createdAt);
+
+  // Paginate the final sorted combined result
+  const paginatedRecords = combinedRecords.slice(0, size);
+
+  // Calculate the total number of documents
+  const totalDocuments = totalPosts + totalPolls + totalEvents;
+
+  // Return both the paginated records and the total count
+  return {
+    paginatedRecords,
+    totalDocuments,
+  };
 };
+
 
 
 groupRoutes.post("/create", async (req, res) => {
@@ -505,27 +536,27 @@ groupRoutes.get("/requests/req", async (req, res) => {
   }
 });
 
-groupRoutes.get("/groups/:groupID/", async(req,res) => {
+groupRoutes.get("/groups/:groupID/", async (req, res) => {
   try {
     const groupID = req.params.groupID;
     const size = parseInt(req.query.size) || 0; 
-    const page = parseInt(req.query.page) || 1; 
+    const page = parseInt(req.query.page) || 1;
 
-    const totalPost = await Post.countDocuments();
-    const totalPoll = await Poll.countDocuments();
+    // Fetch the paginated records and the total document count
+    const { paginatedRecords, totalDocuments } = await mergeSortAndPaginate(page, size, groupID);
 
-    const combinedRecords = await mergeSortAndPaginate(page, size, groupID);
-
+    // Return the records and the total document count
     res.json({
-      records: combinedRecords,
-      total: totalPost+totalPoll,
+      records: paginatedRecords,
+      total: totalDocuments,  // Now using the total count from mergeSortAndPaginate
       size,
       page,
     });
   } catch (error) {
     console.error(error);
-    res.status(400).json(error);
+    res.status(400).json({ error: error.message });
   }
-})
+});
+
 
 module.exports = groupRoutes;

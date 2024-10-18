@@ -63,6 +63,7 @@ jobRoutes.post("/create",async (req, res) => {
       profilePicture,
       verified
     } = req.body;
+    console.log('body')
 
     console.log("request body", req.body);
 
@@ -173,7 +174,7 @@ jobRoutes.post("/create",async (req, res) => {
       //     .json({ error: "Admin not found for the department" });
       // }
     }
-
+    console.log('finish')
     return res.status(201).json({ message: "Success" });
   } catch (error) {
     console.error("Error creating job:", error);

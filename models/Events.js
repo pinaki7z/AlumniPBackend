@@ -27,6 +27,9 @@ const eventSchema = new mongoose.Schema({
   endTime: String,
   allDay: Boolean,
   free: Boolean,
+  priceType: String,
+  amount: Number,
+  currency: String,
   picture: String,
   type: String,
   cName: String,
@@ -36,6 +39,8 @@ const eventSchema = new mongoose.Schema({
   location: String,
   department: String,
   createdAt: Date,
+  groupEvent: Boolean,
+  groupId: String,
   createGroup: Boolean,
   attendance: Number,
   willAttend: [

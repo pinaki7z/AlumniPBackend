@@ -35,7 +35,12 @@ eventRoutes.post("/createEvent", async (req, res) => {
     startTime,
     endTime,
     picture,
+    priceType,
+    currency,
+    amount,
     department,
+    groupEvent,
+    groupId,
     cName,
     cNumber,
     cEmail,
@@ -60,6 +65,8 @@ eventRoutes.post("/createEvent", async (req, res) => {
       allDay,
       free,
       color,
+      groupEvent,
+      groupId,
       type: "event",
       startTime,
       endTime,
@@ -70,6 +77,9 @@ eventRoutes.post("/createEvent", async (req, res) => {
       cEmail,
       location,
       createGroup,
+      priceType,
+      currency,
+      amount,
       archive: false,
       createdAt: new Date(),
     });
@@ -112,31 +122,31 @@ eventRoutes.post("/createEvent", async (req, res) => {
       await newEvent.save();
       console.log("new event id", newEvent._id);
     }
-    const transporter = nodemailer.createTransport({
-      host: "smtp.gmail.com",
-      port: 587,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    // const transporter = nodemailer.createTransport({
+    //   host: "smtp.gmail.com",
+    //   port: 587,
+    //   auth: {
+    //     user: process.env.EMAIL_USER,
+    //     pass: process.env.EMAIL_PASS,
+    //   },
+    // });
 
-    const message = {
-      from: "nandannandu254@gmail.com",
-      to: emails,
-      subject: `Invitation to ${newEvent.title}`,
-      text: `You have been invited to the ${newEvent.title} event in the Alumni Portal. Click on this link to see the event details: ${process.env.CLIENT_URL}/events/${newEvent._id}`,
-    };
+    // const message = {
+    //   from: "nandannandu254@gmail.com",
+    //   to: emails,
+    //   subject: `Invitation to ${newEvent.title}`,
+    //   text: `You have been invited to the ${newEvent.title} event in the Alumni Portal. Click on this link to see the event details: ${process.env.CLIENT_URL}/events/${newEvent._id}`,
+    // };
     
 
-    transporter.sendMail(message, (err, info) => {
-      if (err) {
-        console.log("Error occurred. " + err.message);
-      } else {
-        console.log("Message sent: %s", info.messageId);
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-      }
-    });
+    // transporter.sendMail(message, (err, info) => {
+    //   if (err) {
+    //     console.log("Error occurred. " + err.message);
+    //   } else {
+    //     console.log("Message sent: %s", info.messageId);
+    //     console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    //   }
+    // });
 
     res.status(201).send(newEvent);
     console.log("new event id", newEvent._id);

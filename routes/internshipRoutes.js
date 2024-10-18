@@ -4,6 +4,7 @@ require("dotenv").config();
 const verifyToken = require("../utils");
 const checkProfileLevel = require("../middleware/checkProfileLevel");
 const Internship = require("../models/internship");
+const Job = require("../models/job");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
@@ -163,8 +164,8 @@ internshipRoutes.post("/apply/:_id", upload.single('resume'), async (req, res) =
 internshipRoutes.get("/", async(req,res)=>{
     try
     {
-        const internship = await Internship.find();
-        return res.status(201).send(internship);
+        const jobs = await Job.find().sort({ createdAt: -1 });
+        return res.status(201).send(jobs);
     }catch(error){
         return res.status(500).send(error);
     }
