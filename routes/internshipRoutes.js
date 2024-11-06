@@ -161,15 +161,21 @@ internshipRoutes.post("/apply/:_id", upload.single('resume'), async (req, res) =
   }
 });
 
-internshipRoutes.get("/", async(req,res)=>{
-    try
-    {
-        const jobs = await Job.find().sort({ createdAt: -1 });
-        return res.status(201).send(jobs);
-    }catch(error){
-        return res.status(500).send(error);
-    }
-})
+internshipRoutes.get("/", async (req, res) => {
+  try {
+      const jobs = await Job.find().sort({ createdAt: -1 });
+      const internships = await Internship.find().sort({ createdAt: -1 });
+
+      // Combine both arrays into one
+      const combined = [...jobs, ...internships];
+
+      return res.status(200).send(combined);
+  } catch (error) {
+      return res.status(500).send({ error: error.message });
+  }
+});
+
+
 
 internshipRoutes.delete("/:_id", async(req,res)=>{
   try{
