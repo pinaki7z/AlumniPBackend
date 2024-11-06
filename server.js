@@ -20,6 +20,7 @@ const searchRoutes = require("./routes/searchRoutes")
 const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const pollRoutes = require("./routes/pollRoutes");
+const uploadGoogleDriveRoutes = require("./routes/uploadGoogleDriveRoutes");
 const forgotPassRoutes = require("./routes/forgotPass")
 
 
@@ -87,7 +88,8 @@ app.use("/messages", messageRoutes);
 app.use("/search", searchRoutes);
 app.use("/notifications", notificationRoutes);
 app.use("/poll", pollRoutes);
-app.use('/uploadImage',uploadRoutes )
+app.use('/uploadImage',uploadRoutes );
+app.use('/uploadGoogleDrive',uploadGoogleDriveRoutes )
 app.use('/forgotPass',forgotPassRoutes)
 
 const server = app.listen(apiPort, () => {

@@ -29,6 +29,9 @@ const NotificationSchema = new mongoose.Schema({
   ownerId: {
     type: String,
   },
+  link: {
+    type: String,
+  },
   businessVerification: String,
   status: {
     type: Boolean,
