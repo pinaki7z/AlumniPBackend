@@ -19,6 +19,9 @@ let AlumniSchema = new Schema(
     graduation_degree: {
       type: String,
     },
+    captchaToken: {
+      type: String,
+    },
     email: {
       type: String,
       required: true,

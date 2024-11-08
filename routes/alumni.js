@@ -1,6 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const axios = require('axios');
 require("dotenv").config();
 const alumniRoutes = express.Router();
 const verifyToken = require("../utils");
@@ -54,6 +55,7 @@ alumniRoutes.post(
       mobile,
       password,
       dob,
+      captchaToken,
       gender,
       profile,
       graduatedFromClass,
@@ -86,6 +88,13 @@ alumniRoutes.post(
     let { otp, status, profileLevel } = req.body;
 
     try {
+
+      const captchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captchaToken}`;
+
+    const captchaResponse = await axios.post(captchaVerifyUrl);
+    if (!captchaResponse.data.success) {
+      return res.status(400).json("reCAPTCHA validation failed. Please try again.");
+    }
       // Check if the username already exists in the database
       const existingAlumni = await Alumni.findOne({ email });
       if (existingAlumni) {
@@ -189,9 +198,15 @@ alumniRoutes.post(
 );
 
 alumniRoutes.post("/login", async (req, res) => {
-  const { email, password } = req.body;
+  const { email, password,captchaToken } = req.body;
 
   try {
+    const captchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captchaToken}`;
+
+    const captchaResponse = await axios.post(captchaVerifyUrl);
+    if (!captchaResponse.data.success) {
+      return res.status(400).json("reCAPTCHA validation failed. Please try again.");
+    }
     const alumni = await Alumni.findOne({ email: email });
 
     if (!alumni) {
