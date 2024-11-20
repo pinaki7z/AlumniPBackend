@@ -1,7 +1,7 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
-const axios = require('axios');
+const axios = require("axios");
 require("dotenv").config();
 const alumniRoutes = express.Router();
 const verifyToken = require("../utils");
@@ -15,7 +15,7 @@ const mongoose = require("mongoose");
 const Notification = require("../models/notification");
 const Company = require("../models/company");
 const schedule = require("node-schedule");
-const sendEmail = require('../email/emailConfig');
+const sendEmail = require("../email/emailConfig");
 //const csv = require('csv-parser');
 
 const randomstring = require("randomstring");
@@ -34,10 +34,11 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-const secretKey="f3c8a3c9b8a9f0b2440a646f3a5b8f9e6d6e46555a4b2b5c6d7c8d9e0a1b2c3d4f5e6a7b8c9d0e1f2a3b4c5d6e7f8g9h0";
+const secretKey =
+  "f3c8a3c9b8a9f0b2440a646f3a5b8f9e6d6e46555a4b2b5c6d7c8d9e0a1b2c3d4f5e6a7b8c9d0e1f2a3b4c5d6e7f8g9h0";
 
 const generateOTP = () => {
-  const otp = Math.floor(1000 + Math.random() * 9000); 
+  const otp = Math.floor(1000 + Math.random() * 9000);
   return otp.toString();
 };
 
@@ -88,13 +89,14 @@ alumniRoutes.post(
     let { otp, status, profileLevel } = req.body;
 
     try {
-
       const captchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captchaToken}`;
 
-    const captchaResponse = await axios.post(captchaVerifyUrl);
-    if (!captchaResponse.data.success) {
-      return res.status(400).json("reCAPTCHA validation failed. Please try again.");
-    }
+      const captchaResponse = await axios.post(captchaVerifyUrl);
+      if (!captchaResponse.data.success) {
+        return res
+          .status(400)
+          .json("reCAPTCHA validation failed. Please try again.");
+      }
       // Check if the username already exists in the database
       const existingAlumni = await Alumni.findOne({ email });
       if (existingAlumni) {
@@ -113,7 +115,15 @@ alumniRoutes.post(
         newExpirationDate.setDate(currentDate.getDate() + 7);
       }
 
-      const profileLevelValue = admin ? 1 : alumni ? 2 : student ? 3 : specialRole ? 4 :null;
+      const profileLevelValue = admin
+        ? 1
+        : alumni
+        ? 2
+        : student
+        ? 3
+        : specialRole
+        ? 4
+        : null;
 
       const newAlumni = new Alumni({
         firstName,
@@ -198,14 +208,16 @@ alumniRoutes.post(
 );
 
 alumniRoutes.post("/login", async (req, res) => {
-  const { email, password,captchaToken } = req.body;
+  const { email, password, captchaToken } = req.body;
 
   try {
     const captchaVerifyUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${process.env.RECAPTCHA_SECRET}&response=${captchaToken}`;
 
     const captchaResponse = await axios.post(captchaVerifyUrl);
     if (!captchaResponse.data.success) {
-      return res.status(400).json("reCAPTCHA validation failed. Please try again.");
+      return res
+        .status(400)
+        .json("reCAPTCHA validation failed. Please try again.");
     }
     const alumni = await Alumni.findOne({ email: email });
 
@@ -225,18 +237,12 @@ alumniRoutes.post("/login", async (req, res) => {
 
     let passwordMatch = false;
 
-    
     if (alumni.password.startsWith("$2")) {
       passwordMatch = await bcrypt.compare(password, alumni.password);
     } else {
-      
-
-      
       passwordMatch =
         password === alumni.password ||
         (await bcrypt.compare(password, alumni.password));
-
-      
     }
 
     if (passwordMatch) {
@@ -244,7 +250,12 @@ alumniRoutes.post("/login", async (req, res) => {
       alumni.password = encrypted;
       await alumni.save();
       const token = jwt.sign(
-        { userId: alumni._id, username: alumni.firstName, email: email, password: password },
+        {
+          userId: alumni._id,
+          username: alumni.firstName,
+          email: email,
+          password: password,
+        },
         secretKey
       );
 
@@ -253,7 +264,7 @@ alumniRoutes.post("/login", async (req, res) => {
         token: token,
         alumni: alumni,
       });
-    } else {      
+    } else {
       return res.status(401).json("Invalid password");
     }
   } catch (err) {
@@ -265,8 +276,10 @@ alumniRoutes.post("/login", async (req, res) => {
 alumniRoutes.get("/all", async (req, res) => {
   try {
     const alumni = await Alumni.find()
-      .select("firstName lastName profilePicture profileLevel _id email workExperience accountDeleted graduatingYear class groupNames linkedIn department batch")
-      .lean(); 
+      .select(
+        "firstName lastName profilePicture profileLevel _id email workExperience accountDeleted graduatingYear class groupNames linkedIn department batch"
+      )
+      .lean();
     if (!alumni.length) {
       return res.status(404).send("No Alumni Members");
     }
@@ -278,26 +291,21 @@ alumniRoutes.get("/all", async (req, res) => {
   }
 });
 
-
-
-alumniRoutes.get(
-  "/:alumniId",
-  async (req, res) => {
-    try {
-      const alumni = await Alumni.findById(req.params.alumniId).select(
-        "-password"
-      );
-      if (!alumni) {
-        return res
-          .status(404)
-          .json({ success: false, message: "Alumni not found" });
-      }
-      res.json(alumni);
-    } catch (err) {
-      res.status(500).json({ success: false, message: "Server error" });
+alumniRoutes.get("/:alumniId", async (req, res) => {
+  try {
+    const alumni = await Alumni.findById(req.params.alumniId).select(
+      "-password"
+    );
+    if (!alumni) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Alumni not found" });
     }
+    res.json(alumni);
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Server error" });
   }
-);
+});
 
 alumniRoutes.put("/:alumniId", verifyToken, async (req, res) => {
   const { alumniId } = req.params;
@@ -338,7 +346,7 @@ alumniRoutes.put("/:alumniId", verifyToken, async (req, res) => {
 
     if (student === true) {
       updatedData.profileLevel = 3;
-    } 
+    }
 
     delete updatedData.oldPassword;
     delete updatedData.newPassword;
@@ -367,28 +375,17 @@ alumniRoutes.put("/:alumniId", verifyToken, async (req, res) => {
       });
 
       const superAdmin = await Alumni.findOne({
-        profileLevel: 0
+        profileLevel: 0,
       });
 
-      if (superAdmin) {
+      const recipient = admin || superAdmin;
+
+      if (recipient) {
         const userName = `${alumni.firstName} ${alumni.lastName}`;
         const newNotification = new Notification({
           userId: alumni._id,
           requestedUserName: userName,
-          ownerId: superAdmin._id,
-          ID: ID,
-          status: false,
-        });
-
-        await newNotification.save();
-      }
-
-      if (admin) {
-        const userName = `${alumni.firstName} ${alumni.lastName}`;
-        const newNotification = new Notification({
-          userId: alumni._id,
-          requestedUserName: userName,
-          ownerId: admin._id,
+          ownerId: recipient._id,
           ID: ID,
           status: false,
         });
@@ -430,7 +427,9 @@ alumniRoutes.patch("/:_id/follow", async (req, res) => {
       await alumni.save();
       await userToUpdate.save();
 
-      res.status(200).json({ message: "Unfollowed successfully", alumni: userToUpdate });
+      res
+        .status(200)
+        .json({ message: "Unfollowed successfully", alumni: userToUpdate });
     } else {
       alumni.followers.push({ userId, firstName: userToUpdate.firstName });
       userToUpdate.following.push({ userId: _id, firstName: alumni.firstName });
@@ -446,16 +445,17 @@ alumniRoutes.patch("/:_id/follow", async (req, res) => {
       await userToUpdate.save();
       const existingNotification = await Notification.findOneAndUpdate(
         { userId: userId, followedUserName: followedUserName },
-        { $set: {
-          userId: userId,
-          followedUser: _id,
-          follow: true,
-          followedUserName: followedUserName,
-          requestedUserName: requestedUserName,
-          createdAt: new Date()
-        } 
-      },
-        { upsert: true, new: true, setDefaultsOnInsert: true } 
+        {
+          $set: {
+            userId: userId,
+            followedUser: _id,
+            follow: true,
+            followedUserName: followedUserName,
+            requestedUserName: requestedUserName,
+            createdAt: new Date(),
+          },
+        },
+        { upsert: true, new: true, setDefaultsOnInsert: true }
       );
       const notificationIdString = existingNotification._id.toString();
       const notificationId = notificationIdString
@@ -538,7 +538,6 @@ alumniRoutes.post("/alumni/verify-otp", async (req, res) => {
   const { email, otp } = req.body;
 
   try {
-    
     const alumni = await Alumni.findOne({ email });
 
     if (!alumni) {
@@ -546,13 +545,11 @@ alumniRoutes.post("/alumni/verify-otp", async (req, res) => {
       return res.status(404).send("alumni not found");
     }
 
-    
     if (alumni.otp !== otp) {
       console.error("Invalid OTP");
       return res.status(400).send("Invalid OTP");
     }
 
-   
     alumni.status = "Verified";
     alumni.otp = undefined;
     await alumni.save();
@@ -577,7 +574,7 @@ alumniRoutes.post("/alumni/generate-otp", async (req, res) => {
     // Find user by email and update OTP
     const user = await Alumni.findOneAndUpdate(
       { email }, // Search by email
-      { otp },   // Update OTP field
+      { otp }, // Update OTP field
       { new: true } // Return the updated user
     );
 
@@ -657,7 +654,6 @@ alumniRoutes.put("/alumni/reset-password", async (req, res) => {
     return res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 alumniRoutes.get("/", async (req, res) => {
   try {
@@ -753,7 +749,10 @@ alumniRoutes.get("/:_id/followers", async (req, res) => {
 });
 
 alumniRoutes.get("/all/allAlumni", async (req, res) => {
-  const alumni = await Alumni.find({}, { _id: 1, firstName: 1,profileLevel: 1 });
+  const alumni = await Alumni.find(
+    {},
+    { _id: 1, firstName: 1, profileLevel: 1 }
+  );
   res.json(alumni);
 });
 
