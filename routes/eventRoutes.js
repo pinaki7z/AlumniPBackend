@@ -277,8 +277,8 @@ eventRoutes.delete("/", async (req, res) => {
 
 eventRoutes.put("/attendEvent/:_id", async (req, res) => {
   const eventID = req.params._id;
-  const { userId, userName, profilePicture, attendance, groupName } = req.body;
-  console.log("attendance", attendance, groupName);
+  const { userId, userName, profilePicture, attendance, groupName,department,classNo,graduatingYear } = req.body;
+  console.log("attendance", classNo,graduatingYear,department);
 
   try {
     const event = await Event.findById(eventID);
@@ -286,7 +286,7 @@ eventRoutes.put("/attendEvent/:_id", async (req, res) => {
       return res.status(404).json({ message: "Event not found" });
     }
 
-    const userObject = { userId, userName, profilePicture };
+    const userObject = { userId, userName, profilePicture,department,classNo,graduatingYear };
 
     const removeUserFromArray = (array) => {
       console.log("array remover", array);
@@ -297,7 +297,6 @@ eventRoutes.put("/attendEvent/:_id", async (req, res) => {
     };
 
     const addUserToArray = (array) => {
-      console.log("array add", array);
       if (!array.some((user) => user.userId === userId)) {
         array.push(userObject);
       }

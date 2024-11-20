@@ -47,6 +47,9 @@ const eventSchema = new mongoose.Schema({
     {
       userId: String,
       userName: String,
+      graduatingYear: Number,
+      classNo: Number,
+      department: String,
       profilePicture: String,
     },
   ],
@@ -54,6 +57,9 @@ const eventSchema = new mongoose.Schema({
     {
       userId: String,
       userName: String,
+      graduatingYear: Number,
+      classNo: Number,
+      department: String,
       profilePicture: String,
     },
   ],
@@ -61,6 +67,9 @@ const eventSchema = new mongoose.Schema({
     {
       userId: String,
       userName: String,
+      graduatingYear: Number,
+      classNo: Number,
+      department: String,
       profilePicture: String,
     },
   ],

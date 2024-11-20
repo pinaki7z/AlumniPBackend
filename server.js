@@ -21,7 +21,8 @@ const messageRoutes = require("./routes/messageRoutes");
 const notificationRoutes = require("./routes/notificationRoutes");
 const pollRoutes = require("./routes/pollRoutes");
 const uploadGoogleDriveRoutes = require("./routes/uploadGoogleDriveRoutes");
-const forgotPassRoutes = require("./routes/forgotPass")
+const forgotPassRoutes = require("./routes/forgotPass");
+const imageRoutes = require("./routes/imageRoutes");
 
 
 
@@ -90,7 +91,8 @@ app.use("/notifications", notificationRoutes);
 app.use("/poll", pollRoutes);
 app.use('/uploadImage',uploadRoutes );
 app.use('/uploadGoogleDrive',uploadGoogleDriveRoutes )
-app.use('/forgotPass',forgotPassRoutes)
+app.use('/forgotPass',forgotPassRoutes);
+app.use('/images',imageRoutes);
 
 const server = app.listen(apiPort, () => {
   console.log(`Server running on port ${apiPort}`);
