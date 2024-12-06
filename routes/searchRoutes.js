@@ -17,11 +17,11 @@ searchRoutes.get("/search", async (req, res) => {
         const groupResults = await Group.find({ groupName: { $regex: new RegExp(keyword, 'i') } });
         const jobResults = await Job.find({
             $or: [
-                { jobTitle: { $regex: new RegExp(keyword, 'i') } },
+                { title: { $regex: new RegExp(keyword, 'i') } },
                 { description: { $regex: new RegExp(keyword, 'i') } }
             ]
         });
-        const internshipResults = await Internship.find({ internshipTitle: { $regex: new RegExp(keyword, 'i') } });
+        const internshipResults = await Internship.find({ title: { $regex: new RegExp(keyword, 'i') } });
 
         res.json({
             forum: forumResults,
