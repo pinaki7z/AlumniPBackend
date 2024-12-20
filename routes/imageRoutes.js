@@ -51,10 +51,16 @@ const getImagesFromFolder = async (folderId) => {
 imageRoutes.get("/getGoogleDriveFolders", async (req, res) => {
   try {
     const folders = await Image.find()
-      .select("link -_id") // Fetch only the `link` field
+      .select("link date -_id") // Fetch only the `link` field
       .sort({ createdAt: -1 }); // Sort in descending order by `createdAt`
+      const formattedFolders = folders.map((folder) => ({
+        link: folder.link,
+        date: folder.date // Rename to `date`
+      }));
+  
+      res.status(200).json({ folders: formattedFolders });
 
-    res.status(200).json({ folders: folders.map((folder) => folder.link) });
+    // res.status(200).json({ folders: folders.map((folder) => folder.link) });
   } catch (err) {
     console.error("Error fetching Google Drive links:", err);
     res.status(500).json({ error: "Failed to fetch Google Drive links" });
